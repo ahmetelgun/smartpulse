@@ -1,0 +1,14 @@
+table, tr, td{
+    border: 1px solid black;  
+}
+td{
+    padding: 10px;
+}
+.Home{
+    position:absolute;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    background-color: red;
+    max-height: 400px;
+    width: 500px;
+}
