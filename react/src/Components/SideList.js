@@ -30,7 +30,7 @@ const SideList = (props) => {
   }
   if (data) {
     content = (data.body.organizations.map((item, index) => (
-      <SideButton onClick={() => {
+      <SideButton key={index} onClick={() => {
         props.setSelectedCompany(item);
       }}>
         {item.organizationName}

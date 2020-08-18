@@ -7,15 +7,16 @@ import { styles } from './Variables';
 import Production from './Production';
 import useFetch from '../UseFetch';
 import { Loading } from './Animations';
+import CustomSelect from './CustomSelect';
 const Container = styled.div`
-  
   height: 300px;
   padding: 15px;
   position: relative;
   display: flex;
   flex-direction: column;
   background-color: rgba(240,240,240, .6);
-
+  align-items: center;
+  justify-content: center;
     
   ::before{
     content: "";
@@ -34,29 +35,73 @@ const Container = styled.div`
   }
 `;
 
-const Select = styled.div`
-  margin-top: 20px;
+const Button = styled.button`
+  padding: 5px 10px;
+  background-color: ${styles.green};
+  width: 125px;
+  border-radius: 3px;
+  :disabled{
+    background-color: #ccc;
+  }
 `;
 
+const Title = styled.h3`
+  color: ${styles.green};
+`;
+
+const DateBox = styled.div`
+margin-top: 20px;
+  display: flex;
+  label{
+    display: block;
+  }
+  label+label{
+    margin-top: 10px;
+  }
+  div{
+    display: flex;
+    flex-direction: column;
+  }
+  div + div{
+    margin-left: 10px;
+    margin-top: 0;
+  }
+  & ${Button}{
+    margin-left: 10px;
+  }
+  
+`;
+
+const Main = styled.div`
+  display: flex;
+  flex-direction: column;
+  margin-top: 20px;
+  div + div{
+    margin-top: 20px;
+  }
+  div + button{
+    margin-top: 20px;
+  }
+`
 
 const OrganizationDetail = (props) => {
   const [data, loading, error, callFetch] = useFetch();
   const [selectedCompany, setSelectedCompany] = useState();
-  const [selectedStation, setSelectStation] = useState(null)
-  const [startDate, setStartDate] = useState(null)
-  const [endDate, setEndDate] = useState(null)
+  const [selectedStation, setSelectedStation] = useState(null);
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+  const [selectedType, setSelectedType] = useState(null);
   useEffect(() => {
     if (props.selectedCompany) {
+      setSelectedStation(null)
       callFetch(`/api/organization?etso=${props.selectedCompany.organizationETSOCode}`)
         .then(() => {
           setSelectedCompany(props.selectedCompany);
-
         })
     }
   }, [props.selectedCompany])
 
   let content;
-
 
   if (loading) {
     content = <Loading />
@@ -64,51 +109,58 @@ const OrganizationDetail = (props) => {
   else if (error) {
     content = "error"
   }
-  else if (data) {
 
-    let stations;
-    if (data.body.injectionUnitNames.length == 0) {
-      stations = <Select>"tesis yok"</Select>;
-    }
-    else if (props.selectedCompany == selectedCompany) {
-      if (!selectedStation) {
-        setSelectStation(data.body.injectionUnitNames[0].eic);
+  else if (data && selectedCompany == props.selectedCompany) {
+    const title = <Title>{selectedCompany.organizationName}</Title>
+    let main;
+    if (data.body.injectionUnitNames.length > 0) {
+      const types = [
+        { name: 'KGUP', value: 'kgup' },
+        { name: 'EAK', value: 'eak' },
+        { name: 'Arıza ve Bakım Bilgisi', value: 'urgent' }
+      ]
+      let station;
+      if (selectedStation) {
+        station = {
+          etso: selectedCompany.organizationETSOCode,
+          eic: data.body.injectionUnitNames[selectedStation].eic,
+          id: data.body.injectionUnitNames[selectedStation].id,
+          start: startDate,
+          end: endDate,
+          type: selectedType
+        }
       }
-      stations = data.body.injectionUnitNames.map((item, index) => (
-        <option value={item.eic}>{item.name}</option>
-      ));
-      const station = {
-        etso: selectedCompany.organizationETSOCode,
-        eic: selectedStation,
-        start: startDate,
-        end: endDate
-      }
-      content = (
-        <div>
-          <h3 style={{ color: "rgba(0,170,0,.5)" }}>{selectedCompany.organizationName}</h3>
-          <Select>
-            <select onChange={(e) => setSelectStation(e.target.value)} value={selectedStation}>
-              {stations}
-            </select>
-          </Select>
-          <div style={{ display: "flex", marginTop: "20px" }}>
+      const StationSelect = <CustomSelect items={data.body.injectionUnitNames} style={{ maxWidth: "500px", zIndex: 1 }} setSelected={setSelectedStation} selected={selectedStation} />
+      const TypeSelect = <CustomSelect items={types} setSelected={setSelectedType} selected={selectedType} />
+      main = (
+        <Main>
+          {StationSelect}
+          {TypeSelect}
+          <DateBox>
             <div>
-              baslangic <br /> bitis
+              <span>Başlangıç tarihi</span>
+              <span>Bitiş tarihi</span>
             </div>
-            <div style={{ marginLeft: "10px" }}>
-              <input type="date" onChange={(e) => setStartDate(e.target.value)} />
-              <br />
-              <input type="date" onChange={(e) => setEndDate(e.target.value)} />
+            <div>
+              <input type="date" onChange={e => setStartDate(e.target.value)} />
+              <input type="date" onChange={e => setEndDate(e.target.value)} />
             </div>
-            <button onClick={() => props.setStation(station)} style={{ marginLeft: "30px", backgroundColor: "rgba(0,170,0,.5)", paddingLeft: "20px", paddingRight: "20px", borderRadius: "4px" }} disabled={!(selectedStation && startDate && endDate)}>Ara</button>
-          </div>
-        </div>
+          </DateBox>
+          <Button /* disabled={!(startDate && endDate && selectedStation != null && selectedType != null)}*/ onClick={() => props.setStation(station)}>Ara</Button>
+        </Main>
       )
     }
+    else {
+      main = <div>yok</div>
+    }
+    content = (
+      <div style={{ width: "100%" }}>
+        {title}
+        {main}
+      </div>
+    )
   }
-  else {
 
-  }
   return (
     <Container>
       {content}

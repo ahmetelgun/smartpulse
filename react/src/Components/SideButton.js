@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { styles } from './Variables'
 
 const Button = styled.div`
-    color: rgba(0,170,0,.8);   
+    color: ${styles.green};   
     padding: 20px 15px;
     transition: 170ms;    
     display: flex;
@@ -21,7 +21,7 @@ const Button = styled.div`
       display: flex;
       align-items: center;
       justify-content: center;
-      background-color: rgba(0,170,0,.5);
+      background-color: ${styles.green};
     }
     div{
       min-height: 35px;

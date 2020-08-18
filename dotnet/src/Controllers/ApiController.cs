@@ -53,7 +53,7 @@ namespace dotnet.Controllers
         }
     }
 
-    [Route("/api/production")]
+    [Route("/api/production/kgup")]
     public class ProductionController : ControllerBase
     {
         [HttpGet]
@@ -70,13 +70,29 @@ namespace dotnet.Controllers
         }
     }
 
-    [Route("/api/production2")]
+    [Route("/api/production/eak")]
     public class Production2Controller : ControllerBase
     {
         [HttpGet]
         public IActionResult Get(string etso, string eic, string start, string end)
         {
             string production = Api.GetRequest($"https://seffaflik.epias.com.tr/transparency/service/production/aic?organizationEIC={etso}&uevcbEIC={eic}&startDate={start}&endDate={end}");
+            if (production == "-1")
+            {
+                return StatusCode(500);
+            }
+            JsonElement json = JsonDocument.Parse(production).RootElement;
+            Response.Headers.Add("Cache-Control", "public, s-maxage=1000");
+            return Ok(json);
+        }
+    }
+    [Route("/api/urgent")]
+    public class UrgentController : ControllerBase
+    {
+        [HttpGet]
+        public IActionResult Get(int regionid, string start, string end, int uevcbid)
+        {
+            string production = Api.GetRequest($"https://seffaflik.epias.com.tr/transparency/service/production/urgent-market-message?startDate={start}&endDate={end}&regionId={regionid}&uevcbId={uevcbid}");
             if (production == "-1")
             {
                 return StatusCode(500);

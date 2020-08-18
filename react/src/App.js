@@ -11,7 +11,10 @@ import Production from './Components/Production';
 import OrganizationDetail from './Components/OrganizationDetail';
 import styled from 'styled-components';
 import { styles } from './Components/Variables';
-import SideButton from './Components/SideButton'
+import SideButton from './Components/SideButton';
+import CustomSlect from './Components/CustomSelect';
+
+
 
 const Container = styled.div`
 display: flex;
@@ -42,5 +45,6 @@ const App = () => {
     </div>
   )
 };
+
 
 export default App;
