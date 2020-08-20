@@ -87,10 +87,10 @@ const Main = styled.div`
 const OrganizationDetail = (props) => {
   const [data, loading, error, callFetch] = useFetch();
   const [selectedCompany, setSelectedCompany] = useState();
-  const [selectedStation, setSelectedStation] = useState(null);
+  const [selectedStation, setSelectedStation] = useState(0);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
-  const [selectedType, setSelectedType] = useState(null);
+  const [selectedType, setSelectedType] = useState([]);
   useEffect(() => {
     if (props.selectedCompany) {
       setSelectedStation(null)
@@ -127,11 +127,18 @@ const OrganizationDetail = (props) => {
           id: data.body.injectionUnitNames[selectedStation].id,
           start: startDate,
           end: endDate,
-          type: selectedType
+          types: selectedType
+        }
+      }
+      const handleChange = (index) => {
+        if (selectedType.includes(index)) {
+          setSelectedType(selectedType.filter(i => i != index));
+        } else {
+          setSelectedType([...selectedType, index].sort());
         }
       }
       const StationSelect = <CustomSelect items={data.body.injectionUnitNames} style={{ maxWidth: "500px", zIndex: 1 }} setSelected={setSelectedStation} selected={selectedStation} />
-      const TypeSelect = <CustomSelect items={types} setSelected={setSelectedType} selected={selectedType} />
+      const TypeSelect = types.map((item, index) => <label>{item.name}: <input type="checkbox" value={item.value} onChange={() => handleChange(index)} checked={selectedType.includes(index)} /> </label>)
       main = (
         <Main>
           {StationSelect}

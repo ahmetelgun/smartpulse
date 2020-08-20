@@ -1,9 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import {
-  BrowserRouter as Router,
-  Switch,
-  Route,
-} from 'react-router-dom';
+import React, { useState } from "react";
+
 
 import Header from './Components/Header'
 import SideList from './Components/SideList'
@@ -45,6 +41,5 @@ const App = () => {
     </div>
   )
 };
-
 
 export default App;
