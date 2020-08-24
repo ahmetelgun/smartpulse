@@ -1,7 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import {
-  useParams,
-} from 'react-router-dom';
 import styled from 'styled-components';
 import { styles } from './Variables';
 import Production from './Production';
@@ -17,7 +14,7 @@ const Container = styled.div`
   background-color: rgba(240,240,240, .6);
   align-items: center;
   justify-content: center;
-    
+
   ::before{
     content: "";
     background-image: url("./wind.png");
@@ -69,7 +66,7 @@ margin-top: 20px;
   & ${Button}{
     margin-left: 10px;
   }
-  
+
 `;
 
 const Main = styled.div`

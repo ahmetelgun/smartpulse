@@ -1,16 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import {
-  useParams,
-} from 'react-router-dom';
 import styled from 'styled-components';
 import { styles } from './Variables';
 import Plot from 'react-plotly.js';
 import useFetch from '../UseFetch';
 import { Loading } from './Animations';
-import ReactDataSheet from 'react-datasheet';
-import 'react-datasheet/lib/react-datasheet.css';
-import _ from 'lodash';
-import * as mathjs from 'mathjs';
+import { AgGridReact } from 'ag-grid-react';
+
+import 'ag-grid-community/dist/styles/ag-grid.css';
+import 'ag-grid-community/dist/styles/ag-theme-alpine.css';
+
 const Container = styled.div`
   height: 100%;
   display: flex;
@@ -34,114 +32,70 @@ const Container = styled.div`
     background-position: 50% 50%;
     background-size: 100px ;
   }
-`;
+  `;
 
-const getPlotList = (statistics) => {
-  let data = []
-  statistics.forEach((element, index) => {
-    data.push({ x: element.tarih.split("T")[0], y: element.toplamSum });
-  });
-  data.sort((a, b) => (a.x > b.x) ? 1 : -1)
-  let x = []
-  let y = []
-  data.forEach(item => {
-    x.push(item.x)
-    y.push(item.y)
-  })
-  return { x: x, y: y }
-}
-const getUrgentDailyList = (list) => {
-  let data = []
-  list.forEach((element, index) => {
-    let temp = 0
-    element.faultDetails.forEach((fault, faultIndex) => {
-      temp = temp + fault.faultCausedPowerLoss
+let hourlyList = {}
+const getPlotList = (statistics, daily = true, name = "") => {
+  if (daily) {
+    let data = []
+    statistics.forEach((element, index) => {
+      data.push({ x: element.tarih.split("T")[0], y: element.toplamSum });
+    });
+    data.sort((a, b) => (a.x > b.x) ? 1 : -1)
+    let x = []
+    let y = []
+    data.forEach(item => {
+      x.push(item.x)
+      y.push(item.y)
     })
-    data.push({ x: element.caseStartDate.split("T")[0], y: temp })
-  })
-  data.sort((a, b) => (a.x > b.x) ? 1 : -1)
-  let x = []
-  let y = []
-  data.forEach(item => {
-    x.push(item.x)
-    y.push(item.y)
-  })
-  return { x: x, y: y }
-}
+    return { x: x, y: y }
+  }
+  else {
 
-let allDatas = {}
-const getSheetList = (d, s) => {
-  d.forEach(item => {
-    if (allDatas[item.tarih]) {
-      if (allDatas[item.tarih].length < s) {
-        allDatas[item.tarih].push(item.toplam)
+    statistics.forEach(element => {
+      if (hourlyList[element.tarih]) {
+        hourlyList[element.tarih][name] = { value: element.toplam }
+      } else {
+        hourlyList[element.tarih] = {}
+        hourlyList[element.tarih][name] = { value: element.toplam }
       }
-    } else {
-      allDatas[item.tarih] = []
-      allDatas[item.tarih].push(item.toplam)
-    }
-  })
+    })
+  }
 }
-
-const getUrgentSheetList = (d, s) => {
-  d.forEach(item => {
-    item.faultDetails.forEach(fault => {
-      if (allDatas[fault.date]) {
-        if (allDatas[fault.date].length < s) {
-          allDatas[fault.date].push(fault.faultCausedPowerLoss)
-          allDatas[fault.date].push(item.reason)
+const getUrgentList = (list, daily = true) => {
+  let data = []
+  if (daily) {
+    list.forEach((element, index) => {
+      let temp = 0
+      element.faultDetails.forEach((fault, faultIndex) => {
+        temp = temp + fault.faultCausedPowerLoss
+      })
+      data.push({ x: element.caseStartDate.split("T")[0], y: temp })
+    })
+    data.sort((a, b) => (a.x > b.x) ? 1 : -1)
+    let x = []
+    let y = []
+    data.forEach(item => {
+      x.push(item.x)
+      y.push(item.y)
+    })
+    return { x: x, y: y }
+  } else {
+    list.forEach((element, index) => {
+      element.faultDetails.forEach((fault, faultIndex) => {
+        if (hourlyList[fault.date]) {
+          hourlyList[fault.date]["urgent"] = { value: fault.faultCausedPowerLoss, reason: element.reason }
+        } else {
+          hourlyList[fault.date] = {}
+          hourlyList[fault.date]["urgent"] = { value: fault.faultCausedPowerLoss, reason: element.reason }
         }
-      } else {
-        allDatas[fault.date] = []
-        allDatas[fault.date].push(fault.faultCausedPowerLoss)
-        allDatas[fault.date].push(item.reason)
-      }
+      })
     })
-  })
+  }
 }
-let listData = {}
-const getListData = (l, s) => {
-  const q = "ABCDEF"
-  Object.keys(l).forEach((item, index) => {
-    listData[`A${index + 1}`] = { value: item.split("T")[1].split(":")[0] + ":" + item.split("T")[1].split(":")[1], key: `A${index + 1}`, expr: "", className: "" };
-    l[item].forEach((v, i) => {
-      listData[`${q[i + 1]}${index + 1}`] = { value: v, key: `${q[i + 1]}${index + 1}`, expr: "", className: "" };
-    })
-    //if (temp.length < (s + 3)) {
-    //  temp.push({ value: "", key: `${q[temp.length - 1]}${index + 1}`, expr: '' })
-    //}
-    //listData.push(temp);
-  })
-  return listData
-}
-
-const q = " ABCDEF"
-
-const generateGrid = (grid, l, s) => {
-  return _.range(l + 2).map((row, i) =>
-    _.range(s + 3).map((col, j) => {
-      if (i == 0 && j == 0) {
-        return { readOnly: true, value: '' }
-      }
-      if (row === 0) {
-        return { readOnly: true, value: q[j] }
-      }
-      if (j === 0) {
-        return { readOnly: true, value: row }
-      }
-      if (grid[q[j] + row]) {
-        return grid[q[j] + row]
-      } else {
-        return { value: "", key: `${q[j]}${row}`, expr: "" }
-      }
-    })
-  )
-}
-
-
 
 const Production = (props) => {
-  let urls
+  let urls;
   if (props.station) {
     urls = [
       `/api/production/kgup?etso=${props.station.etso}&eic=${props.station.eic}&start=${props.station.start}&end=${props.station.end}`,
@@ -149,18 +103,17 @@ const Production = (props) => {
       `/api/urgent?regionid=1&uevcbid=${props.station.id}&start=${props.station.start}&end=${props.station.end}`,
     ]
   }
+
   const [kgupData, kgupLoading, kgupError, kgupCallFetch] = useFetch()
   const [eakData, eakLoading, eakError, eakCallFetch] = useFetch()
   const [urgentData, urgentLoading, urgentError, urgentCallFetch] = useFetch()
+
   const [station, setStation] = useState(null);
   const [types, setTypes] = useState([]);
   const [toggle, setToggle] = useState(false);
-  const [listDatas, setListDatas] = useState(null);
   useEffect(() => {
-    listData = {}
-    allDatas = {}
     if (props.station) {
-      setListDatas(null)
+      setTypes([])
       let t = []
       if (props.station.types.includes(0)) {
         kgupCallFetch(urls[0]).then(() => { t.push(0); setTypes(t.sort()); })
@@ -175,15 +128,6 @@ const Production = (props) => {
   }, [props.station])
 
 
-
-
-
-
-
-
-
-
-
   if (props.station && types.length == props.station.types.length && props.station != station) {
     setStation(props.station);
   }
@@ -194,24 +138,22 @@ const Production = (props) => {
   else if (kgupError || eakError || urgentError) {
     content = <div>error</div>
   }
-  else if (props.station == null) {
-    content = "";
-  }
-  else if (station == props.station) {
-    let plotData = {};
-    const s = station.types.length
+  else if (props.station != null && station == props.station) {
 
+
+    //////////  GRAPHIC  //////////
+    let plotData = {};
     if (station.types.includes(0)) {
-      plotData["kgup"] = getPlotList(kgupData.body.statistics)
-      getSheetList(kgupData.body.dppList, 1)
+      plotData["kgup"] = getPlotList(kgupData.body.statistics, true)
+      getPlotList(kgupData.body.dppList, false, "kgup")
     }
     if (station.types.includes(1)) {
-      plotData["eak"] = getPlotList(eakData.body.statistics)
-      getSheetList(eakData.body.aicList, 2)
+      plotData["eak"] = getPlotList(eakData.body.statistics, true)
+      getPlotList(eakData.body.aicList, false, "eak")
     }
     if (station.types.includes(2)) {
-      plotData["urgent"] = getUrgentDailyList(urgentData.body.urgentMarketMessageList)
-      getUrgentSheetList(urgentData.body.urgentMarketMessageList, 3)
+      plotData["urgent"] = getUrgentList(urgentData.body.urgentMarketMessageList, true)
+      getUrgentList(urgentData.body.urgentMarketMessageList, false)
     }
     let plotDataList = []
     Object.keys(plotData).forEach((key, index) => {
@@ -225,86 +167,75 @@ const Production = (props) => {
       useResizeHandler={true}
       style={{ width: "100%", height: "100%" }}
     />
-    let list;
-    getListData(allDatas, types.length)
+    //////////  GRAPHIC END  //////////
 
 
-
-
-
-    function validateExp(trailKeys, expr) {
-      let valid = true;
-      const matches = expr.match(/[A-Z][1-9]+/g) || [];
-      matches.map(match => {
-        if (trailKeys.indexOf(match) > -1) {
-          valid = false
-        } else {
-          valid = validateExp([...trailKeys, match], listDatas[match].expr)
-        }
-      })
-      return valid
+    //////////  LIST  //////////
+    const typeDefinitions = {
+      0: [{ headerName: "KGUP", field: "kgup", editable: true, width: 100, resizable: true }],
+      1: [{ headerName: "EAK", field: "eak", editable: true, width: 100, resizable: true }],
+      2: [
+        { headerName: "Ariza ve Bakim", field: "urgent", editable: true, width: 100, resizable: true },
+        { headerName: "Ariza ve Bakim Nedeni", field: "urgentReason", width: 200, resizable: true }
+      ]
     }
 
-    function computeExpr(key, expr, scope) {
-      let value = null;
-      if (expr.charAt(0) !== '=') {
-        return { className: '', value: expr, expr: expr };
-      } else {
-        try {
-          value = mathjs.evaluate(expr.substring(1), scope)
-        } catch (e) {
-          value = null
-        }
+    var columnDefs = [
+      { headerName: "Tarih", field: "date", resizable: true },
+    ]
+    types.forEach(type => {
+      typeDefinitions[type].forEach(f => {
+        columnDefs.push(f)
+      })
+    })
 
-        if (value !== null && validateExp([key], expr)) {
-          return { className: 'equation', value, expr }
+    let listData = [];
+    Object.keys(hourlyList).forEach(item => {
+      let temp = {}
+      Object.keys(hourlyList[item]).forEach(i => {
+        temp["date"] = item.split("T")[0] + " " + item.split("T")[1].split(":")[0] + ":" + item.split("T")[1].split(":")[1];
+        if (i == "urgent") {
+          temp["urgent"] = hourlyList[item][i].value
+          temp["urgentReason"] = hourlyList[item][i].reason
         } else {
-          return { className: 'error', value: 'error', expr: '' }
+          temp[i] = hourlyList[item][i].value
         }
+      })
+      listData.push(temp)
+    })
+    listData.push({ date: "Toplam", kgup: '=ctx.sum("kgup")', eak: '=ctx.sum("eak")', urgent: '=ctx.sum("urgent")' })
+
+    let gridOptions = {
+      enableCellExpressions: true,
+      context: {
+
       }
     }
-
-    function cellUpdate(state, changeCell, expr) {
-      const scope = _.mapValues(state, (val) => isNaN(val.value) ? 0 : parseFloat(val.value))
-      const updatedCell = _.assign({}, changeCell, computeExpr(changeCell.key, expr, scope))
-      state[changeCell.key] = updatedCell
-
-      _.each(state, (cell, key) => {
-        if (cell.expr.charAt(0) === '=' && cell.expr.indexOf(changeCell.key) > -1 && key !== changeCell.key) {
-          state = cellUpdate(state, cell, cell.expr)
+    gridOptions.context.sum = (field) => {
+      let s = 0;
+      listData.forEach(item => {
+        if (!isNaN(item[field])) {
+          s += parseFloat(item[field])
         }
       })
-      return state
+      return s;
     }
+    let list = (
+      <div className="ag-theme-alpine" style={{ height: '100%', width: '100%' }}>
+        <AgGridReact
+          columnDefs={columnDefs}
+          rowData={listData}
+          gridOptions={gridOptions}
+        >
+        </AgGridReact>
+      </div>
+    )
 
-    function onCellsChanged(changes) {
-      let state = _.assign({}, listDatas)
-      changes.forEach(({ cell, value }) => {
-        cellUpdate(state, cell, value)
-      })
-      setListDatas(state);
-    }
+    //////////  LIST END  //////////
 
-    if (listDatas == null) {
-      setListDatas(listData);
-
-    } else {
-      const q = generateGrid(listDatas, Object.keys(allDatas).length, types.length)
-      console.log(q)
-      list = <ReactDataSheet
-        data={q}
-        valueRenderer={cell => cell.value}
-        dataRenderer={(cell) => cell.expr}
-        onCellsChanged={onCellsChanged}
-      />
-    }
-
-
-
-    console.log(listData)
-    content = <div style={{ width: "100%", height: "100%" }}>
-      <button onClick={() => setToggle(!toggle)}>{toggle ? "Grafik" : "Liste"}</button>
-      {toggle ? list : plot}
+    content = <div style={{ width: "100%", height: "100%", position: 'relative' }}>
+      <button style={{ position: "absolute", top: "0", width: "150px", height: "50px", borderRadius: "5px", zIndex: 1, right: "0", backgroundColor: styles.green }} onClick={() => setToggle(!toggle)}>{toggle ? "Liste" : "Grafik"}</button>
+      {toggle ? plot : list}
     </div>
   }
 

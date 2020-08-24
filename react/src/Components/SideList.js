@@ -1,16 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import {
-  useParams,
-} from 'react-router-dom';
 import styled from 'styled-components';
 import { styles } from './Variables';
 import { Loading } from "./Animations";
 import SideButton from './SideButton';
 import useFetch from '../UseFetch';
 const Container = styled.div`
-    height: calc(100vh - ${styles.header_height});    
+    height: calc(100vh - ${styles.header_height});
     width: 500px;
-    box-sizing: border-box; 
+    box-sizing: border-box;
     padding: 0px 10px 10px;
     overflow-x: hidden;
     overflow-y: scroll;

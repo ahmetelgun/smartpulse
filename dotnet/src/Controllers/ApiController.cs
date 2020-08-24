@@ -23,8 +23,6 @@ namespace dotnet.Controllers
 
         public IActionResult Get()
         {
-            //return StatusCode(201);
-
             string organizations = Api.GetRequest("https://seffaflik.epias.com.tr/transparency/service/production/dpp-organization");
             if (organizations == "-1")
             {

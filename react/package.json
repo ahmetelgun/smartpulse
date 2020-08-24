@@ -6,15 +6,13 @@
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.5.0",
     "@testing-library/user-event": "^7.2.1",
-    "lodash": "^4.17.20",
-    "mathjs": "^7.1.0",
+    "ag-grid-community": "^23.2.1",
+    "ag-grid-react": "^23.2.1",
     "plotly.js": "^1.54.7",
     "plotly.js-dist": "^1.54.7",
     "react": "^16.13.1",
-    "react-datasheet": "^1.4.8",
     "react-dom": "^16.13.1",
     "react-plotly.js": "^2.4.0",
-    "react-router-dom": "^5.2.0",
     "react-scripts": "3.4.2",
     "styled-components": "^5.1.1"
   },
@@ -39,5 +37,12 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "https://localhost:5001"
+  "proxy": "https://localhost:5001",
+  "devDependencies": {
+    "eslint-config-airbnb": "^18.2.0",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-plugin-jsx-a11y": "^6.3.1",
+    "eslint-plugin-prettier": "^3.1.4",
+    "prettier": "^2.0.5"
+  }
 }
