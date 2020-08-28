@@ -13,6 +13,9 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Http;
 using dotnet.API;
+using Microsoft.EntityFrameworkCore;
+using dotnet.Models;
+
 namespace dotnet
 {
     public class Startup
@@ -36,7 +39,7 @@ namespace dotnet
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
 
             app.UseRouting();
 

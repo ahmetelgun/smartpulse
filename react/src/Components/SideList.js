@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { styles } from './Variables';
 import { Loading } from "./Animations";
 import SideButton from './SideButton';
-import useFetch from '../UseFetch';
+import useFetch from '@ahmetelgun/usefetch';
 const Container = styled.div`
     height: calc(100vh - ${styles.header_height});
     width: 500px;
@@ -26,7 +26,7 @@ const SideList = (props) => {
     content = "error";
   }
   if (data) {
-    content = (data.body.organizations.map((item, index) => (
+    content = (data.data.map((item, index) => (
       <SideButton key={index} onClick={() => {
         props.setSelectedCompany(item);
       }}>

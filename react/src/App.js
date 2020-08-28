@@ -26,17 +26,15 @@ const RightPanel = styled.div`
 
 const App = () => {
   const [selectedCompany, setSelectedCompany] = useState(null);
-  const [station, setStation] = useState(null);
-
-
+  const [stations, setStations] = useState([]);
   return (
     <div>
       <Header />
       <Container style={{ display: "flex" }}>
         <SideList setSelectedCompany={setSelectedCompany} />
         <RightPanel>
-          <OrganizationDetail selectedCompany={selectedCompany} setStation={setStation} />
-          <Production station={station} />
+          <OrganizationDetail selectedCompany={selectedCompany} setStation={setStations} />
+          <Production stations={stations} />
         </RightPanel>
       </Container>
     </div>
