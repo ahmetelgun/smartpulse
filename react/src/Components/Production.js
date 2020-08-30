@@ -203,12 +203,12 @@ const Production = (props) => {
 
 
     console.log(sheetList)
-    content = <div className="ag-theme-alpine" style={{ height: '100%', width: '100%' }}>
+    /* content = <div className="ag-theme-alpine" style={{ height: '100%', width: '100%' }}>
       <AgGridReact
         columnDefs={header}
         rowData={sheetList}
       ></AgGridReact></div>
-    console.log(header);
+    console.log(header); */
 
 
     //////////  END SHEET  //////////
