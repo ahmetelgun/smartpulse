@@ -13,29 +13,14 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using dotnet.API;
 using dotnet.Models;
-
+using dotnet.Controllers;
 namespace dotnet
 {
     public class Program
     {
         public static void Main(string[] args)
         {
-            /* 
-                        string organizationsString = Api.GetRequest("https://seffaflik.epias.com.tr/transparency/service/production/dpp-organization");
-                        JsonElement json = JsonDocument.Parse(organizationsString).RootElement;
-                        JsonElement orgs = json.GetProperty("body").GetProperty("organizations");
-
-
-                        using (var db = new SmartPulseContext())
-                        {
-                            foreach (var item in orgs.EnumerateArray())
-                            {
-                                Organization temp = JsonSerializer.Deserialize<Organization>(item.GetRawText());
-                                db.Add(temp);
-                            }
-                            db.SaveChanges();
-
-                        } */
+            StartupController.GetOrganizations();
             CreateHostBuilder(args).Build().Run();
         }
 

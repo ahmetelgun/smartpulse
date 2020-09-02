@@ -2,15 +2,17 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using dotnet.Models;
 
 namespace aspnetapp.Migrations
 {
     [DbContext(typeof(SmartPulseContext))]
-    partial class SmartPulseContextModelSnapshot : ModelSnapshot
+    [Migration("20200831091059_second")]
+    partial class second
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -59,31 +61,6 @@ namespace aspnetapp.Migrations
                     b.HasIndex("organizationId");
 
                     b.ToTable("Stations");
-                });
-
-            modelBuilder.Entity("dotnet.Models.User", b =>
-                {
-                    b.Property<string>("email")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("name")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("password")
-                        .HasColumnType("TEXT");
-
-                    b.Property<byte[]>("salt")
-                        .HasColumnType("BLOB");
-
-                    b.Property<string>("surname")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("token")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("email");
-
-                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("dotnet.Models.Station", b =>

@@ -34,6 +34,19 @@ const Container = styled.div`
     background-size: 100px ;
   }
   `;
+const TabButton = styled.button`
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 1;
+  height: 45px;
+  width: 65px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background-color: green;
+`;
 
 let hourlyList = {}
 const getList = (statistics, daily = true, name = "") => {
@@ -99,6 +112,7 @@ const getUrgentList = (list, daily = true, name = "") => {
 
 const Production = (props) => {
   const [data, loading, error, callFetch] = useFetch();
+  const [isGraphicShow, setIsGraphicShow] = useState(false);
   useEffect(() => {
     if (props.stations.length > 0) {
       const options = {
@@ -147,7 +161,7 @@ const Production = (props) => {
       })
     })
 
-    content = <Plot
+    const plot = <Plot
       data={plotData}
       layout={{
         autosize: true,
@@ -202,17 +216,22 @@ const Production = (props) => {
     })
 
 
-    console.log(sheetList)
-    /* content = <div className="ag-theme-alpine" style={{ height: '100%', width: '100%' }}>
+    const sheet = <div className="ag-theme-alpine" style={{ height: '100%', width: '100%' }}>
       <AgGridReact
         columnDefs={header}
         rowData={sheetList}
       ></AgGridReact></div>
-    console.log(header); */
+    console.log(header);
 
 
     //////////  END SHEET  //////////
 
+    content = (
+      <>
+        <TabButton onClick={() => setIsGraphicShow(!isGraphicShow)}>{isGraphicShow ? "Liste" : "Grafik"}</TabButton>
+        {isGraphicShow ? plot : sheet}
+      </>
+    )
 
   }
   return (

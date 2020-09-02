@@ -8,6 +8,7 @@ const Button = styled.div`
     transition: 170ms;    
     display: flex;
     width: 100%;
+    align-items: center;
     :hover{
       cursor: pointer;
       background-color: rgb(200,200,200);
@@ -25,16 +26,27 @@ const Button = styled.div`
     }
     div{
       min-height: 35px;
-      display: flex;
-      align-items: center;
+      
+    }
+    button{
+      margin-left: auto;
+      
     }
   `;
+
+const SelectBox = styled.button`
+  border: none;
+  border-radius: 25px;
+  min-width: 25px;
+  min-height: 25px;
+`;
 
 const SideButton = ({ children, ...props }) => {
   return (
     <Button {...props}>
       <span>{children.charAt(0)}</span>
       <div>{children}</div>
+      <SelectBox style={{ backgroundColor: props.selected ? "black" : "white" }} />
     </Button>
   )
 }

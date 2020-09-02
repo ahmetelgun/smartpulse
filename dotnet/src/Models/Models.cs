@@ -8,17 +8,8 @@ namespace dotnet.Models
     {
         public DbSet<Organization> Organizations { get; set; }
         public DbSet<Station> Stations { get; set; }
-
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<Station>()
-                .HasOne(p => p.organization)
-                .WithMany(b => b.stations);
-
-            modelBuilder.Entity<Organization>()
-                .HasMany(b => b.stations)
-                .WithOne(p => p.organization);
-        }
+        //public DbSet<Production> Productions { get; set; }
+        public DbSet<User> Users { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder options)
             => options.UseSqlite("Data Source=smartpulse.db");
     }
@@ -30,7 +21,6 @@ namespace dotnet.Models
         public int organizationStatus { get; set; }
         public string organizationETSOCode { get; set; }
         public string organizationShortName { get; set; }
-        public List<Station> stations { get; set; } = new List<Station>();
     }
 
     public class Station
@@ -51,5 +41,18 @@ namespace dotnet.Models
         public Int64 id { get; set; }
         public List<int> types { get; set; }
     }
+
+    public class User
+    {
+        public string name { get; set; }
+        public string surname { get; set; }
+        [Key]
+        public string email { get; set; }
+        public string password { get; set; }
+        public string token { get; set; }
+        public string salt { get; set; }
+    }
+
+
 
 }

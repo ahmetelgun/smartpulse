@@ -9,8 +9,8 @@ using dotnet.Models;
 namespace aspnetapp.Migrations
 {
     [DbContext(typeof(SmartPulseContext))]
-    [Migration("20200826065309_second")]
-    partial class second
+    [Migration("20200901172729_user_added2")]
+    partial class user_added2
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -63,10 +63,35 @@ namespace aspnetapp.Migrations
                     b.ToTable("Stations");
                 });
 
+            modelBuilder.Entity("dotnet.Models.User", b =>
+                {
+                    b.Property<string>("email")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("name")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("password")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("salt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("surname")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("token")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("email");
+
+                    b.ToTable("Users");
+                });
+
             modelBuilder.Entity("dotnet.Models.Station", b =>
                 {
                     b.HasOne("dotnet.Models.Organization", "organization")
-                        .WithMany("stations")
+                        .WithMany()
                         .HasForeignKey("organizationId");
                 });
 #pragma warning restore 612, 618

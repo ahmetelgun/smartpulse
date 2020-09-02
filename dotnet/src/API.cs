@@ -32,7 +32,7 @@ namespace dotnet.API
             }
             catch (WebException e)
             {
-                //Console.WriteLine(e);
+                Console.WriteLine(e);
                 response = "-1";
             }
             return response;

@@ -11,6 +11,7 @@ RUN dotnet tool install --global dotnet-ef
 RUN echo "export PATH=$PATH:/root/.dotnet/tools" >> /root/.bashrc
 RUN export PATH=$PATH:/root/.dotnet/tools
 RUN dotnet add package Microsoft.EntityFrameworkCore.Design
+RUN dotnet add package System.IdentityModel.Tokens.Jwt
 #RUN /root/.dotnet/tools/dotnet-ef migrations add InitialCreate
 #RUN /root/.dotnet/tools/dotnet-ef database update
 

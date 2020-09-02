@@ -10,7 +10,7 @@ const Container = styled.div`
   height: 300px;
   padding: 15px;
   position: relative;
-  display: flex;
+  /* display: flex; */
   flex-direction: column;
   background-color: rgba(240,240,240, .6);
   align-items: center;
@@ -89,14 +89,15 @@ const OrganizationDetail = (props) => {
   const [endDate, setEndDate] = useState(null);
   const [selectedType, setSelectedType] = useState([]);
   useEffect(() => {
-    if (props.selectedCompany) {
+
+    if (props.selectedCompanies.length > 0) {
       setSelectedStations([])
-      callFetch(`/api/organization?etso=${props.selectedCompany.organizationETSOCode}`)
+      callFetch(`/api/organization?etso=${props.selectedCompanies.join()}`)
         .then(() => {
-          setSelectedCompany(props.selectedCompany);
+          setSelectedCompany(props.selectedCompanies);
         })
     }
-  }, [props.selectedCompany])
+  }, [props.selectedCompanies])
 
   let content;
 
@@ -107,8 +108,7 @@ const OrganizationDetail = (props) => {
     content = "error"
   }
 
-  else if (data && selectedCompany == props.selectedCompany) {
-    const title = <Title>{selectedCompany.organizationName}</Title>
+  else if (data && selectedCompany == props.selectedCompanies) {
     let main;
     if (data.data.length > 0) {
       const types = [
@@ -124,10 +124,16 @@ const OrganizationDetail = (props) => {
           setSelectedType([...selectedType, index].sort());
         }
       }
-
-
-      const options = data.data.map(item => ({ value: item.id, label: item.name, eic: item.eic }))
+      let options = data.data.map(organization => {
+        return {
+          label: organization.name,
+          options: organization.stations.map(station => (
+            { value: station.id, label: station.name, eic: station.eic }
+          ))
+        }
+      });
       const StationSelect = <Select isMulti options={options} onChange={e => setSelectedStations(e)} />
+
       const TypeSelect = types.map((item, index) => <label key={index}>{item.name}: <input type="checkbox" value={item.value} onChange={() => handleChange(index)} checked={selectedType.includes(index)} /> </label>)
       let stations;
       if (selectedStations) {
@@ -170,10 +176,10 @@ const OrganizationDetail = (props) => {
     }
     content = (
       <div style={{ width: "100%" }}>
-        {title}
         {main}
       </div>
     )
+
   }
 
 

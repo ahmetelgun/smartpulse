@@ -15,7 +15,6 @@ using Microsoft.AspNetCore.Http;
 using dotnet.API;
 using Microsoft.EntityFrameworkCore;
 using dotnet.Models;
-
 namespace dotnet
 {
     public class Startup

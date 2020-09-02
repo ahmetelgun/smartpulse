@@ -60,3 +60,7 @@
 /source/bin/Debug/netcoreapp3.1/runtimes/win-x64/native/e_sqlite3.dll
 /source/bin/Debug/netcoreapp3.1/runtimes/win-x86/native/e_sqlite3.dll
 /source/bin/Debug/netcoreapp3.1/Microsoft.EntityFrameworkCore.Design.dll
+/source/bin/Debug/netcoreapp3.1/Microsoft.IdentityModel.JsonWebTokens.dll
+/source/bin/Debug/netcoreapp3.1/Microsoft.IdentityModel.Logging.dll
+/source/bin/Debug/netcoreapp3.1/Microsoft.IdentityModel.Tokens.dll
+/source/bin/Debug/netcoreapp3.1/System.IdentityModel.Tokens.Jwt.dll

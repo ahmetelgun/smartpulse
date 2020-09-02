@@ -2,15 +2,17 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using dotnet.Models;
 
 namespace aspnetapp.Migrations
 {
     [DbContext(typeof(SmartPulseContext))]
-    partial class SmartPulseContextModelSnapshot : ModelSnapshot
+    [Migration("20200901093226_user_added")]
+    partial class user_added
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -71,9 +73,6 @@ namespace aspnetapp.Migrations
 
                     b.Property<string>("password")
                         .HasColumnType("TEXT");
-
-                    b.Property<byte[]>("salt")
-                        .HasColumnType("BLOB");
 
                     b.Property<string>("surname")
                         .HasColumnType("TEXT");
