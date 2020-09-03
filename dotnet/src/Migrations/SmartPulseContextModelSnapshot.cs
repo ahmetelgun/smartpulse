@@ -39,6 +39,56 @@ namespace aspnetapp.Migrations
                     b.ToTable("Organizations");
                 });
 
+            modelBuilder.Entity("dotnet.Models.Portfolio", b =>
+                {
+                    b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("name")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("useremail")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("id");
+
+                    b.HasIndex("useremail");
+
+                    b.ToTable("Portfolios");
+                });
+
+            modelBuilder.Entity("dotnet.Models.ProductionDB", b =>
+                {
+                    b.Property<long>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("eic")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("end")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("etso")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("name")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("portfolioid")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("start")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("id");
+
+                    b.HasIndex("portfolioid");
+
+                    b.ToTable("ProductionDBs");
+                });
+
             modelBuilder.Entity("dotnet.Models.Station", b =>
                 {
                     b.Property<long>("id")
@@ -61,6 +111,25 @@ namespace aspnetapp.Migrations
                     b.ToTable("Stations");
                 });
 
+            modelBuilder.Entity("dotnet.Models.Type", b =>
+                {
+                    b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long?>("productiondbid")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("type")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("id");
+
+                    b.HasIndex("productiondbid");
+
+                    b.ToTable("Types");
+                });
+
             modelBuilder.Entity("dotnet.Models.User", b =>
                 {
                     b.Property<string>("email")
@@ -72,8 +141,8 @@ namespace aspnetapp.Migrations
                     b.Property<string>("password")
                         .HasColumnType("TEXT");
 
-                    b.Property<byte[]>("salt")
-                        .HasColumnType("BLOB");
+                    b.Property<string>("salt")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("surname")
                         .HasColumnType("TEXT");
@@ -86,11 +155,32 @@ namespace aspnetapp.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("dotnet.Models.Portfolio", b =>
+                {
+                    b.HasOne("dotnet.Models.User", "user")
+                        .WithMany("portfolios")
+                        .HasForeignKey("useremail");
+                });
+
+            modelBuilder.Entity("dotnet.Models.ProductionDB", b =>
+                {
+                    b.HasOne("dotnet.Models.Portfolio", "portfolio")
+                        .WithMany("productions")
+                        .HasForeignKey("portfolioid");
+                });
+
             modelBuilder.Entity("dotnet.Models.Station", b =>
                 {
                     b.HasOne("dotnet.Models.Organization", "organization")
                         .WithMany()
                         .HasForeignKey("organizationId");
+                });
+
+            modelBuilder.Entity("dotnet.Models.Type", b =>
+                {
+                    b.HasOne("dotnet.Models.ProductionDB", "productiondb")
+                        .WithMany("types")
+                        .HasForeignKey("productiondbid");
                 });
 #pragma warning restore 612, 618
         }

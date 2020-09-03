@@ -20,6 +20,8 @@ namespace dotnet.Controllers
     {
         public static void GetOrganizations()
         {
+
+
             /* string organizationsString = Api.GetRequest("https://seffaflik.epias.com.tr/transparency/service/production/dpp-organization");
             JsonElement json = JsonDocument.Parse(organizationsString).RootElement;
             JsonElement orgs = json.GetProperty("body").GetProperty("organizations");
