@@ -4,11 +4,3 @@ table, tr, td{
 td{
     padding: 10px;
 }
-.Home{
-    position:absolute;
-    overflow-x: hidden;
-    overflow-y: scroll;
-    background-color: red;
-    max-height: 400px;
-    width: 500px;
-}

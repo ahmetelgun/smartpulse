@@ -39,56 +39,6 @@ namespace aspnetapp.Migrations
                     b.ToTable("Organizations");
                 });
 
-            modelBuilder.Entity("dotnet.Models.Portfolio", b =>
-                {
-                    b.Property<int>("id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("name")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("useremail")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("id");
-
-                    b.HasIndex("useremail");
-
-                    b.ToTable("Portfolios");
-                });
-
-            modelBuilder.Entity("dotnet.Models.ProductionDB", b =>
-                {
-                    b.Property<long>("id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("eic")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("end")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("etso")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("name")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("portfolioid")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("start")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("id");
-
-                    b.HasIndex("portfolioid");
-
-                    b.ToTable("ProductionDBs");
-                });
-
             modelBuilder.Entity("dotnet.Models.Station", b =>
                 {
                     b.Property<long>("id")
@@ -109,25 +59,6 @@ namespace aspnetapp.Migrations
                     b.HasIndex("organizationId");
 
                     b.ToTable("Stations");
-                });
-
-            modelBuilder.Entity("dotnet.Models.Type", b =>
-                {
-                    b.Property<int>("id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<long?>("productiondbid")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("type")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("id");
-
-                    b.HasIndex("productiondbid");
-
-                    b.ToTable("Types");
                 });
 
             modelBuilder.Entity("dotnet.Models.User", b =>
@@ -155,18 +86,26 @@ namespace aspnetapp.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("dotnet.Models.Portfolio", b =>
+            modelBuilder.Entity("dotnet.Models.WatchList", b =>
                 {
-                    b.HasOne("dotnet.Models.User", "user")
-                        .WithMany("portfolios")
-                        .HasForeignKey("useremail");
-                });
+                    b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
 
-            modelBuilder.Entity("dotnet.Models.ProductionDB", b =>
-                {
-                    b.HasOne("dotnet.Models.Portfolio", "portfolio")
-                        .WithMany("productions")
-                        .HasForeignKey("portfolioid");
+                    b.Property<string>("json")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("name")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("useremail")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("id");
+
+                    b.HasIndex("useremail");
+
+                    b.ToTable("WatchLists");
                 });
 
             modelBuilder.Entity("dotnet.Models.Station", b =>
@@ -176,11 +115,11 @@ namespace aspnetapp.Migrations
                         .HasForeignKey("organizationId");
                 });
 
-            modelBuilder.Entity("dotnet.Models.Type", b =>
+            modelBuilder.Entity("dotnet.Models.WatchList", b =>
                 {
-                    b.HasOne("dotnet.Models.ProductionDB", "productiondb")
-                        .WithMany("types")
-                        .HasForeignKey("productiondbid");
+                    b.HasOne("dotnet.Models.User", "user")
+                        .WithMany("watchLists")
+                        .HasForeignKey("useremail");
                 });
 #pragma warning restore 612, 618
         }

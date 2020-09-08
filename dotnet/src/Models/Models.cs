@@ -8,15 +8,19 @@ namespace dotnet.Models
     {
         public DbSet<Organization> Organizations { get; set; }
         public DbSet<Station> Stations { get; set; }
-        public DbSet<Portfolio> Portfolios { get; set; }
+        public DbSet<WatchList> WatchLists { get; set; }
         public DbSet<User> Users { get; set; }
-        public DbSet<ProductionDB> ProductionDBs { get; set; }
-        public DbSet<Type> Types { get; set; }
+
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Portfolio>()
+            modelBuilder.Entity<WatchList>()
                 .HasOne(p => p.user)
-                .WithMany(b => b.portfolios);
+                .WithMany(b => b.watchLists);
+
+            modelBuilder.Entity<User>()
+                .HasMany(p => p.watchLists)
+                .WithOne(b => b.user);
 
         }
 
@@ -52,27 +56,6 @@ namespace dotnet.Models
         public List<int> types { get; set; }
     }
 
-    public class ProductionDB
-    {
-        public string name { get; set; }
-        public string etso { get; set; }
-        public string eic { get; set; }
-        public string start { get; set; }
-        public string end { get; set; }
-        [Key]
-        public Int64 id { get; set; }
-        public Portfolio portfolio { get; set; }
-        public List<Type> types { get; set; }
-    }
-
-    public class Type
-    {
-        [Key]
-        public int id { get; set; }
-        public int type { get; set; }
-        public ProductionDB productiondb { get; set; }
-    }
-
     public class User
     {
         public string name { get; set; }
@@ -82,18 +65,15 @@ namespace dotnet.Models
         public string password { get; set; }
         public string token { get; set; }
         public string salt { get; set; }
-        public List<Portfolio> portfolios { get; set; }
+        public List<WatchList> watchLists { get; set; }
     }
 
-
-    public class Portfolio
+    public class WatchList
     {
         [Key]
         public int id { get; set; }
         public string name { get; set; }
+        public string json { get; set; }
         public User user { get; set; }
-        public List<ProductionDB> productions { get; set; }
     }
-
-
 }

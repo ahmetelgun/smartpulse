@@ -1,44 +1,33 @@
-
 import React, { useState, useEffect } from "react";
-import Header from './Components/Header'
-import SideList from './Components/SideList'
-import Production from './Components/Production';
-import OrganizationDetail from './Components/OrganizationDetail';
-import styled from 'styled-components';
-import { styles } from './Components/Variables';
-import SideButton from './Components/SideButton';
-import CustomSlect from './Components/CustomSelect';
-import { Signup, Signin, Logout } from './Components/Auth';
+import Signin from './Pages/Signin/Signin';
+import Signup from './Pages/Signup/Signup';
 import {
-  BrowserRouter as Router,
   Switch,
   Route,
-  Link,
   useLocation,
-  useHistory,
-  browserHistory
 } from "react-router-dom";
 import useFetch from "@ahmetelgun/usefetch";
-import { getCookie, setCookie } from "./Components/utils";
-const Index = styled.div`
-display: flex;
+import Header from './Globals/Header';
+import Index from './Pages/Index/Index';
+import { getCookie, setCookie } from "./Globals/utils";
+import Logout from './Pages/Logout/Logout';
+import WatchList from './Pages/WatchList/WatchList';
+import styled from "styled-components";
+const Container = styled.div`
+  filter: ${props => props.watchListShow ? "blur(3px)" : "blur(0px)"};
+  position: relative;
 `;
-
-const RightPanel = styled.div`
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  height:  calc(100vh - ${styles.header_height});
-`;
-
 const App = () => {
+  // eslint-disable-next-line
+  const [data, loading, error, callFetch] = useFetch();
   const [selectedCompanies, setSelectedCompanies] = useState([]);
   const [stations, setStations] = useState([]);
-  const [data, loading, error, callFetch] = useFetch();
   const [isLogin, setIsLogin] = useState(false);
+  const [watchListShow, setWatchListShow] = useState(false);
   let history = useLocation();
-  let token = getCookie("token")
+  let token = getCookie("token");
   useEffect(() => {
+    // eslint-disable-next-line
     token = getCookie("token")
     if (token) {
       const options = {
@@ -49,13 +38,12 @@ const App = () => {
         body: JSON.stringify({ token: token })
       }
       callFetch("/api/signin", options);
-
     }
   }, [history])
-  if (token && data && data.data.message == "success" && isLogin == false) {
+
+  if (token && data && data.data.message === "success" && isLogin === false) {
     setIsLogin(true);
-  }
-  else if (token && data && data.data.message != "success") {
+  } else if (token && data && data.data.message !== "success") {
     setCookie(token, "");
     if (isLogin) {
       setIsLogin(false);
@@ -64,29 +52,29 @@ const App = () => {
     setIsLogin(false);
   }
   return (
-    <>
-      <Header isLogin={isLogin} />
-      <Switch>
-        <Route path="/signup">
-          <Signup />
-        </Route>
-        <Route path="/signin">
-          <Signin isLogin={isLogin} />
-        </Route>
-        <Route path="/logout">
-          <Logout setIsLogin={setIsLogin} />
-        </Route>
-        <Route path="/">
-          <Index style={{ display: "flex" }}>
-            <SideList setSelectedCompanies={setSelectedCompanies} />
-            <RightPanel>
-              <OrganizationDetail selectedCompanies={selectedCompanies} setStation={setStations} />
-              <Production stations={stations} />
-            </RightPanel>
-          </Index>
-        </Route>
-      </Switch>
-    </>
+    <div style={{ position: "relative" }}>
+      <Container watchListShow={watchListShow}>
+        <Header isLogin={isLogin} setWatchListShow={setWatchListShow} />
+        <Switch>
+          <Route path="/signup">
+            <Signup />
+          </Route>
+
+          <Route path="/signin">
+            <Signin isLogin={isLogin} />
+          </Route>
+
+          <Route path="/logout">
+            <Logout setIsLogin={setIsLogin} />
+          </Route>
+
+          <Route path="/">
+            <Index setWatchListShow={setWatchListShow} setSelectedCompanies={setSelectedCompanies} selectedCompanies={selectedCompanies} setStations={setStations} stations={stations} />
+          </Route>
+        </Switch>
+      </Container>
+      {watchListShow && <WatchList show={watchListShow} setShow={setWatchListShow} setStations={setStations} />}
+    </div>
   )
 };
 

@@ -81,7 +81,7 @@ namespace dotnet.Controllers
 
 
     [Route("/api/post")]
-    public class Test : ControllerBase
+    public class ProductionController : ControllerBase
     {
         [HttpPost]
         public ActionResult<List<Production>> Post([FromBody] List<Production> t)
@@ -219,6 +219,99 @@ namespace dotnet.Controllers
             }
             return Ok(new { message = "error" });
         }
+    }
+
+    [Route("/api/savewatchlist")]
+    public class SaveWatchList : ControllerBase
+    {
+        [HttpPost]
+        public IActionResult Post([FromBody] WatchList watchList)
+        {
+            var auth = new AuthenticationController();
+            var db = new SmartPulseContext();
+            string token = Request.Cookies["token"];
+            if (token != null)
+            {
+                var email = auth.ValidateJwtToken(token);
+                if (email != null)
+                {
+                    var user = db.Users.FirstOrDefault(u => u.email == email);
+                    if (user != null)
+                    {
+                        if (token != user.token)
+                        {
+                            return Unauthorized(new { message = "failed" });
+
+                        }
+                        var w = db.WatchLists.FirstOrDefault(w => w.name == watchList.name);
+                        if (w != null)
+                        {
+                            w.json = watchList.json;
+                            db.SaveChanges();
+                            return Ok(new { message = "update success" });
+                        }
+                        watchList.user = user;
+                        db.WatchLists.Add(watchList);
+                        db.SaveChanges();
+                        return Ok(new { message = "success" });
+                    }
+                }
+            }
+            return Unauthorized(new { message = "failed" });
+        }
+    }
+
+    [Route("/api/getwatchlist")]
+    public class GetWatchList : ControllerBase
+    {
+        [HttpGet]
+        public IActionResult Get(string name)
+        {
+
+            var auth = new AuthenticationController();
+            var db = new SmartPulseContext();
+            var token = Request.Cookies["token"];
+            if (token != null)
+            {
+                var email = auth.ValidateJwtToken(token);
+                if (email != null)
+                {
+                    var user = db.Users.FirstOrDefault(u => u.email == email);
+                    if (user != null)
+                    {
+                        if (user.token != token)
+                        {
+                            return Unauthorized(new { message = "failed" });
+                        }
+                        if (name != null)
+                        {
+                            var watchList = db.WatchLists.Where(w => w.user == user && w.name == name).FirstOrDefault();
+                            if (watchList != null)
+                            {
+                                dynamic temp = new ExpandoObject();
+                                temp.name = watchList.name;
+                                temp.json = watchList.json;
+                                return Ok(temp);
+                            }
+                        }
+                        else
+                        {
+                            var watchList = db.WatchLists.Where(w => w.user == user).ToList();
+                            List<string> watchNames = new List<string>();
+                            foreach (var item in watchList)
+                            {
+                                watchNames.Add(item.name);
+                            }
+                            return Ok(watchNames);
+                        }
+
+                        return NotFound(new { message = "name not found" });
+                    }
+                }
+            }
+            return Unauthorized(new { message = "failed" });
+        }
+
     }
 }
 

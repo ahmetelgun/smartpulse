@@ -59,7 +59,7 @@ namespace dotnet.Controllers
                 var jwtToken = (JwtSecurityToken)validatedToken;
                 var email = jwtToken.Claims.First(x => x.Type == "email").Value;
 
-                // return account id from JWT token if validation successful
+                // return account email from JWT token if validation successful
                 return email;
             }
             catch
