@@ -21,14 +21,19 @@ using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.Extensions.Configuration;
+using System.ComponentModel.DataAnnotations;
+using System.Drawing;
+
+
+
 namespace dotnet.Controllers
 {
     [ApiController]
-    [Route("/api/main")]
-    public class MainController : ControllerBase
+    [Route("/api/getorganizations")]
+    public class GetOrganizations : ControllerBase
     {
         [HttpGet]
-        public IActionResult Get()
+        public ActionResult<List<Organization>> Get()
         {
             var db = new SmartPulseContext();
             List<Organization> organizations = db.Organizations.OrderBy(x => x.organizationName).ToList();
@@ -36,85 +41,99 @@ namespace dotnet.Controllers
         }
     }
 
-    [Route("/api/organization")]
-    public class OrganizationController : ControllerBase
+    [Route("/api/getcentrals")]
+    public class GetCentrals : ControllerBase
     {
         [HttpGet]
-        public IActionResult Get(string etso)
+        public ActionResult<List<CentralList>> Get(string etso)
         {
             var db = new SmartPulseContext();
             string[] etsos = etso.Split(",");
-            dynamic organizations = new List<ExpandoObject>();
+            List<CentralList> listOfCentrals = new List<CentralList>();
             foreach (var etsoCode in etsos)
             {
-                var organization = db.Organizations.Where(x => x.organizationETSOCode == etsoCode).FirstOrDefault();
-                if (organization != null)
+                Organization organization = db.Organizations.Where(x => x.organizationETSOCode == etsoCode).FirstOrDefault();
+                if (organization != null) // If there is an existing organization with this etso code
                 {
-                    if (db.Stations.Where(x => x.organization == organization).ToList().Count() == 0)
+                    string centrals;
+                    if (db.Centrals.Where(x => x.organization == organization).ToList().Count() == 0)
                     {
-                        string stations = Api.GetRequest($"https://seffaflik.epias.com.tr/transparency/service/production/dpp-injection-unit-name?organizationEIC={etsoCode}");
-                        if (stations == "-1")
+                        centrals = Api.GetRequest($"https://seffaflik.epias.com.tr/transparency/service/production/dpp-injection-unit-name?organizationEIC={etsoCode}");
+                        if (centrals == "-1")
                         {
                             continue;
                         }
-                        JsonElement units = JsonDocument.Parse(stations).RootElement.GetProperty("body").GetProperty("injectionUnitNames");
+                        JsonElement units = JsonDocument.Parse(centrals).RootElement.GetProperty("body").GetProperty("injectionUnitNames");
 
                         foreach (var item in units.EnumerateArray())
                         {
-                            Station temp = JsonSerializer.Deserialize<Station>(item.GetRawText());
+                            Central temp = JsonSerializer.Deserialize<Central>(item.GetRawText());
                             temp.organization = organization;
-                            db.Stations.Add(temp);
+                            db.Centrals.Add(temp);
                             db.SaveChanges();
                         }
                     }
-                    var stationList = db.Stations.Where(x => x.organization == organization).ToList();
-                    dynamic stationTemp = new ExpandoObject();
-                    stationTemp.stations = stationList;
-                    stationTemp.name = organization.organizationName;
-                    stationTemp.etso = organization.organizationETSOCode;
-                    organizations.Add(stationTemp);
+                    List<Central> centralList = db.Centrals.Where(x => x.organization == organization).Select(s => new Central
+                    {
+                        id = s.id,
+                        name = s.name,
+                        eic = s.eic
+                    }).ToList();
+                    CentralList centralTemp = new CentralList
+                    {
+                        centrals = centralList,
+                        name = organization.organizationName,
+                        etso = organization.organizationETSOCode
+                    };
+                    listOfCentrals.Add(centralTemp);
                 }
             }
-            return Ok(organizations);
+
+            return Ok(listOfCentrals);
+
         }
     }
 
-
-    [Route("/api/post")]
-    public class ProductionController : ControllerBase
+    [Route("/api/getproductiondata")]
+    public class GetProductionData : ControllerBase
     {
         [HttpPost]
-        public ActionResult<List<Production>> Post([FromBody] List<Production> t)
+        public IActionResult Post([FromBody] List<Production> t)
         {
-            var l = new List<ExpandoObject>();
-            foreach (var item in t)
-            {
-                dynamic res = new ExpandoObject();
-                foreach (var type in item.types)
-                {
-                    if (type == 0)
-                    {
-                        string kgupString = Api.GetRequest($"https://seffaflik.epias.com.tr/transparency/service/production/dpp?organizationEIC={item.etso}&uevcbEIC={item.eic}&startDate={item.start}&endDate={item.end}");
-                        JsonElement json = JsonDocument.Parse(kgupString).RootElement;
-                        res.kgup = json.GetProperty("body");
-                    }
-                    else if (type == 1)
-                    {
-                        string eakString = Api.GetRequest($"https://seffaflik.epias.com.tr/transparency/service/production/aic?organizationEIC={item.etso}&uevcbEIC={item.eic}&startDate={item.start}&endDate={item.end}");
-                        JsonElement json = JsonDocument.Parse(eakString).RootElement;
-                        res.eak = json.GetProperty("body");
-                    }
-                    else if (type == 2)
-                    {
-                        string urgentString = Api.GetRequest($"https://seffaflik.epias.com.tr/transparency/service/production/urgent-market-message?startDate={item.start}&endDate={item.end}&regionId=1&uevcbId={item.id}");
-                        JsonElement json = JsonDocument.Parse(urgentString).RootElement;
-                        res.urgent = json.GetProperty("body");
-                    }
-                }
-                res.name = item.name;
-                l.Add(res);
-            }
-            return Ok(l);
+            List<Task> requestList = new List<Task>();
+            List<ProductionData> productionDataList = new List<ProductionData>();
+            Parallel.ForEach(t, item =>
+           {
+               ProductionData productionData = new ProductionData();
+               Parallel.ForEach(item.types, type =>
+             {
+                 if (type == 0)
+                 {
+                     string kgupString = Api.GetRequest($"https://seffaflik.epias.com.tr/transparency/service/production/dpp?organizationEIC={item.etso}&uevcbEIC={item.eic}&startDate={item.start}&endDate={item.end}");
+                     JsonElement json = JsonDocument.Parse(kgupString).RootElement;
+                     productionData.kgup = json.GetProperty("body");
+                 }
+                 else if (type == 1)
+                 {
+                     string eakString = Api.GetRequest($"https://seffaflik.epias.com.tr/transparency/service/production/aic?organizationEIC={item.etso}&uevcbEIC={item.eic}&startDate={item.start}&endDate={item.end}");
+                     JsonElement json = JsonDocument.Parse(eakString).RootElement;
+                     productionData.eak = json.GetProperty("body");
+                 }
+                 else if (type == 2)
+                 {
+                     string urgentString = Api.GetRequest($"https://seffaflik.epias.com.tr/transparency/service/production/urgent-market-message?startDate={item.start}&endDate={item.end}&regionId=1&uevcbId={item.id}");
+                     JsonElement json = JsonDocument.Parse(urgentString).RootElement;
+                     productionData.urgent = json.GetProperty("body");
+                 }
+             });
+
+               productionData.name = item.name;
+               productionDataList.Add(productionData);
+
+           });
+
+
+            return Ok(productionDataList);
         }
     }
 
@@ -125,8 +144,7 @@ namespace dotnet.Controllers
         public IActionResult Post([FromBody] User user)
         {
             var db = new SmartPulseContext();
-            var u = db.Users.Where(u => u.email == user.email).FirstOrDefault();
-            if (user.email == null || user.email == "")
+            if (user.email == null || user.email == "" || !new EmailAddressAttribute().IsValid(user.email))
             {
                 return BadRequest(new { message = "email is invalid" });
             }
@@ -142,6 +160,7 @@ namespace dotnet.Controllers
             {
                 return BadRequest(new { message = "password is invalid" });
             }
+            var u = db.Users.Where(u => u.email == user.email).FirstOrDefault();
             if (u == null)
             {
                 RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider();
@@ -172,20 +191,20 @@ namespace dotnet.Controllers
         {
             var db = new SmartPulseContext();
             var auth = new AuthenticationController();
-            if (user.token != null && user.token != "")
+            if (Request.Cookies["token"] != null && Request.Cookies["token"] != "")
             {
-                var tempUser = db.Users.FirstOrDefault(u => u.token == user.token);
-                var isLogin = auth.ValidateJwtToken(user.token);
+                var tempUser = db.Users.FirstOrDefault(u => u.token == Request.Cookies["token"]);
+                var emailFromToken = auth.ValidateJwtToken(Request.Cookies["token"]);
                 if (tempUser != null)
                 {
-                    if (tempUser.email == isLogin)
+                    if (tempUser.email == emailFromToken)
                     {
                         return Ok(new { message = "success", token = user.token });
                     }
+                    Response.Cookies.Append("token", "");
                     tempUser.token = "";
                     db.SaveChanges();
                 }
-                return Unauthorized(new { message = "token  denied" });
             }
             var temp = db.Users.Where(u => u.email == user.email).FirstOrDefault();
             if (temp != null)
@@ -196,6 +215,7 @@ namespace dotnet.Controllers
                     var token = auth.GenerateJwtToken(temp.email);
                     temp.token = token;
                     db.SaveChanges();
+                    Response.Cookies.Append("token", token);
                     return Ok(new { message = "success", token = token });
                 }
             }
@@ -215,6 +235,7 @@ namespace dotnet.Controllers
             {
                 temp.token = "";
                 db.SaveChanges();
+                Response.Cookies.Append("token", "");
                 return Ok(new { message = "success" });
             }
             return Ok(new { message = "error" });
@@ -230,32 +251,20 @@ namespace dotnet.Controllers
             var auth = new AuthenticationController();
             var db = new SmartPulseContext();
             string token = Request.Cookies["token"];
-            if (token != null)
+            var user = auth.isLogin(token);
+            if (user != null)
             {
-                var email = auth.ValidateJwtToken(token);
-                if (email != null)
+                var w = db.WatchLists.FirstOrDefault(w => w.name == watchList.name);
+                if (w != null)
                 {
-                    var user = db.Users.FirstOrDefault(u => u.email == email);
-                    if (user != null)
-                    {
-                        if (token != user.token)
-                        {
-                            return Unauthorized(new { message = "failed" });
-
-                        }
-                        var w = db.WatchLists.FirstOrDefault(w => w.name == watchList.name);
-                        if (w != null)
-                        {
-                            w.json = watchList.json;
-                            db.SaveChanges();
-                            return Ok(new { message = "update success" });
-                        }
-                        watchList.user = user;
-                        db.WatchLists.Add(watchList);
-                        db.SaveChanges();
-                        return Ok(new { message = "success" });
-                    }
+                    w.json = watchList.json;
+                    db.SaveChanges();
+                    return Ok(new { message = "update success" });
                 }
+                watchList.user = user;
+                db.WatchLists.Add(watchList);
+                db.SaveChanges();
+                return Ok(new { message = "success" });
             }
             return Unauthorized(new { message = "failed" });
         }
@@ -267,48 +276,33 @@ namespace dotnet.Controllers
         [HttpGet]
         public IActionResult Get(string name)
         {
-
             var auth = new AuthenticationController();
             var db = new SmartPulseContext();
             var token = Request.Cookies["token"];
-            if (token != null)
+            var user = auth.isLogin(token);
+            if (user != null)
             {
-                var email = auth.ValidateJwtToken(token);
-                if (email != null)
+                if (name != null)
                 {
-                    var user = db.Users.FirstOrDefault(u => u.email == email);
-                    if (user != null)
+                    var watchList = db.WatchLists.Where(w => w.user == user && w.name == name).FirstOrDefault();
+                    if (watchList != null)
                     {
-                        if (user.token != token)
-                        {
-                            return Unauthorized(new { message = "failed" });
-                        }
-                        if (name != null)
-                        {
-                            var watchList = db.WatchLists.Where(w => w.user == user && w.name == name).FirstOrDefault();
-                            if (watchList != null)
-                            {
-                                dynamic temp = new ExpandoObject();
-                                temp.name = watchList.name;
-                                temp.json = watchList.json;
-                                return Ok(temp);
-                            }
-                        }
-                        else
-                        {
-                            var watchList = db.WatchLists.Where(w => w.user == user).ToList();
-                            List<string> watchNames = new List<string>();
-                            foreach (var item in watchList)
-                            {
-                                watchNames.Add(item.name);
-                            }
-                            return Ok(watchNames);
-                        }
-
-                        return NotFound(new { message = "name not found" });
+                        return Ok(new { name = watchList.name, json = watchList.json });
                     }
                 }
+                else
+                {
+                    var watchList = db.WatchLists.Where(w => w.user == user).ToList();
+                    List<string> watchNames = new List<string>();
+                    foreach (var item in watchList)
+                    {
+                        watchNames.Add(item.name);
+                    }
+                    return Ok(watchNames);
+                }
+                return NotFound(new { message = "name not found" });
             }
+
             return Unauthorized(new { message = "failed" });
         }
 

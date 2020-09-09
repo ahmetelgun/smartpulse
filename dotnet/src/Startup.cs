@@ -29,6 +29,10 @@ namespace dotnet
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
+            services.AddControllers().AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.IgnoreNullValues = true;
+            });
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

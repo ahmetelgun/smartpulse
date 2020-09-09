@@ -73,7 +73,7 @@ const App = () => {
           </Route>
         </Switch>
       </Container>
-      {watchListShow && <WatchList show={watchListShow} setShow={setWatchListShow} setStations={setStations} />}
+      {watchListShow && <WatchList show={watchListShow} setShow={setWatchListShow} setStations={setStations} setSelectedCompanies={setSelectedCompanies} />}
     </div>
   )
 };

@@ -62,7 +62,7 @@ function Signin(props) {
     return (
         <Container onSubmit={handleSubmit}>
             <div>{loginError}</div>
-            <AuthTextInput type="text" placeholder="Email" onChange={e => setEmail(e.target.value)} value={email} />
+            <AuthTextInput type="email" placeholder="Email" onChange={e => setEmail(e.target.value)} value={email} />
             <AuthTextInput type="password" placeholder="Password" onChange={e => setPassword(e.target.value)} value={password} />
             <AuthSubmit type="submit" value="Giris yap" />
         </Container>

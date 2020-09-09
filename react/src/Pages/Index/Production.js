@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import { styles } from '../../Globals/Variables';
 import Plot from 'react-plotly.js';
 import useFetch from '@ahmetelgun/usefetch';
 import { Loading } from '../../Globals/Animations';
@@ -35,19 +34,7 @@ const Container = styled.div`
     background-size: 100px ;
   }
   `;
-const TabButton = styled.button`
-  position: absolute;
-  right: 0;
-  top: 0;
-  z-index: 1;
-  height: 45px;
-  width: 65px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
 
-  background-color: green;
-`;
 
 let hourlyList = {}
 const getList = (statistics, daily = true, name = "") => {
@@ -111,6 +98,8 @@ const getUrgentList = (list, daily = true, name = "") => {
   }
 }
 
+
+
 const Production = (props) => {
   const [data, loading, error, callFetch] = useFetch();
   const [isGraphicShow, setIsGraphicShow] = useState(false);
@@ -123,7 +112,7 @@ const Production = (props) => {
         },
         body: JSON.stringify(props.stations),
       }
-      callFetch("/api/post", options)
+      callFetch("/api/getproductiondata", options)
     }
   }, [props.stations])
   let content;

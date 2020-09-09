@@ -40,7 +40,7 @@ namespace dotnet.Controllers
             return tokenHandler.WriteToken(token);
         }
 
-        public string? ValidateJwtToken(string token)
+        public string ValidateJwtToken(string token)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes("[SECRET USED TO SIGN AND VERIFY JWT TOKENS, IT CAN BE ANY STRING]");
@@ -95,6 +95,28 @@ namespace dotnet.Controllers
                 return true;
             }
             return false;
+        }
+
+        public User isLogin(string token)
+        {
+            var db = new SmartPulseContext();
+            var email = ValidateJwtToken(token);
+            if (token == null)
+            {
+                return null;
+            }
+            if (email != null)
+            {
+                var user = db.Users.FirstOrDefault(u => u.email == email);
+                if (user != null)
+                {
+                    if (user.token == token)
+                    {
+                        return user;
+                    }
+                }
+            }
+            return null;
         }
 
 

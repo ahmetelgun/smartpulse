@@ -67,7 +67,7 @@ const Arrow = styled.div`
 `;
 
 const SideList = (props) => {
-  const [data, loading, error] = useFetch("/api/main");
+  const [data, loading, error] = useFetch("/api/getorganizations");
   const [companyList, setCompanyList] = useState([]);
   const [searchInput, setSearchInput] = useState("");
   const [width, setWidth] = useState(350);

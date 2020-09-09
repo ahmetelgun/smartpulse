@@ -91,7 +91,7 @@ const OrganizationDetail = (props) => {
 
     if (props.selectedCompanies.length > 0) {
       setSelectedStations([])
-      callFetch(`/api/organization?etso=${props.selectedCompanies.join()}`)
+      callFetch(`/api/getcentrals?etso=${props.selectedCompanies.join()}`)
         .then(() => {
           setSelectedCompanies(props.selectedCompanies);
         })
@@ -139,7 +139,7 @@ const OrganizationDetail = (props) => {
       let options = data.data.map(organization => {
         return {
           label: organization.name,
-          options: organization.stations.map(station => (
+          options: organization.centrals.map(station => (
             { value: station.id, label: station.name, eic: station.eic, etso: organization.etso }
           ))
         }

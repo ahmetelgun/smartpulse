@@ -82,7 +82,7 @@ function Signup() {
             <div>{passwordError}</div>
             <AuthTextInput type="text" placeholder="Name" onChange={e => setName(e.target.value)} value={name} required />
             <AuthTextInput type="text" placeholder="Surname" onChange={e => setSurname(e.target.value)} value={surname} required />
-            <AuthTextInput type="text" placeholder="Email" onChange={e => setEmail(e.target.value)} value={email} required />
+            <AuthTextInput type="email" placeholder="Email" onChange={e => setEmail(e.target.value)} value={email} required />
             <AuthTextInput type="password" placeholder="Password" onChange={e => setPassword(e.target.value)} value={password} required />
             <AuthTextInput type="password" placeholder="Password Confirm" onChange={e => setPasswordConfirm(e.target.value)} value={passwordConfirm} required />
             <AuthSubmit type="submit" value="Kayit ol" />

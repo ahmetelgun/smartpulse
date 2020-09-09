@@ -21,6 +21,7 @@ namespace dotnet.API
             string response;
             try
             {
+                Console.WriteLine(url);
                 HttpWebResponse webResponse;
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
                 request.Method = "GET";
@@ -29,6 +30,7 @@ namespace dotnet.API
                 var responseReader = new StreamReader(webStream);
                 response = responseReader.ReadToEnd();
                 responseReader.Close();
+                Console.WriteLine("bitti");
             }
             catch (WebException e)
             {

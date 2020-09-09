@@ -2,12 +2,15 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
+using System.Text;
+using System.Threading.Tasks;
 namespace dotnet.Models
 {
     public class SmartPulseContext : DbContext
     {
         public DbSet<Organization> Organizations { get; set; }
-        public DbSet<Station> Stations { get; set; }
+        public DbSet<Central> Centrals { get; set; }
         public DbSet<WatchList> WatchLists { get; set; }
         public DbSet<User> Users { get; set; }
 
@@ -37,12 +40,30 @@ namespace dotnet.Models
         public string organizationShortName { get; set; }
     }
 
-    public class Station
+    public class Central
     {
         public Int64 id { get; set; }
         public string name { get; set; }
         public string eic { get; set; }
         public Organization organization { get; set; }
+    }
+
+    public class CentralList
+    {
+        public List<Central> centrals { get; set; }
+        public string name { get; set; }
+        public string etso { get; set; }
+    }
+
+
+
+
+    public class ProductionData
+    {
+        public JsonElement? kgup { get; set; } = null;
+        public JsonElement? eak { get; set; } = null;
+        public JsonElement? urgent { get; set; } = null;
+        public string name { get; set; }
     }
 
     public class Production
