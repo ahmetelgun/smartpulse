@@ -34,11 +34,11 @@ const RightPanel = styled.div`
 function Index(props) {
   return (
     <Container>
-      <Side  setSelectedCompanies={props.setSelectedCompanies} />
+      <Side />
 
       <RightPanel>
-        <OrganizationDetail  setWatchList={props.setWatchListShow} selectedCompanies={props.selectedCompanies} setStation={props.setStations} />
-        <Production  stations={props.stations} />
+        <OrganizationDetail />
+        <Production />
       </RightPanel>
     </Container>
   )

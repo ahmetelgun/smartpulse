@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import styled from 'styled-components';
 import useFetch from '@ahmetelgun/usefetch';
 import SearchBar from '../../Globals/SearchBar';
 import SearchButton from '../../Globals/SearchButton';
+import MyContext from '../../MyContext';
 
 const Container = styled.div`
     display: ${props => props.show ? "block" : "none"};
@@ -70,27 +71,34 @@ const NameInput = styled.div`
 `;
 
 
-function WatchList(props) {
+function WatchList() {
     const [data, loading, error, callFetch] = useFetch();
     const [wdata, wloading, werror, wcallFetch] = useFetch();
-    const [content, setContent] = useState();
     const [selected, setSelected] = useState(null);
     const [name, setName] = useState(null);
+    const { setSelectedStations, setSelectedType, toggleCentralsUpdate, centralsUpdate, watchList, setSelectedProductions, setEndDate, setStartDate, setWatchList, setSelectedCompanies } = useContext(MyContext);
     useEffect(() => {
-        if (props.show) {
+        if (watchList) {
             callFetch("/api/getwatchlist");
         }
-    }, [props.show])
+    }, [watchList])
     function handleGet() {
-        if (props.show) {
-            wcallFetch(`/api/getwatchlist?name=${selected}`)
-        }
+        wcallFetch(`/api/getwatchlist?name=${selected}`)
     }
-    if (props.show === true) {
+    if (watchList === true) {
         if (wdata && wdata.status == 200) {
-            console.log("handlegettttttttttttttttt")
-            props.setStations(JSON.parse(wdata.data.json))
-            props.setShow(false);
+            const js = JSON.parse(wdata.data.json)
+            setSelectedCompanies(js.map(item => item.etso))
+            setSelectedStations(js.map(item => ({
+                value: item.id, label: item.name, eic: item.eic, etso: item.etso
+            })))
+            setEndDate(js[0].end)
+            setStartDate(js[0].start)
+            setSelectedType(js[0].types)
+            toggleCentralsUpdate(!centralsUpdate)
+            console.log(js);
+            setSelectedProductions(JSON.parse(wdata.data.json));
+            setWatchList(false);
         }
     }
     let q = 0;
@@ -109,7 +117,7 @@ function WatchList(props) {
     function handleSave(name) {
         var payload = {
             name: name,
-            json: JSON.stringify(props.show)
+            json: JSON.stringify(watchList)
         }
         const options = {
             method: "POST",
@@ -119,10 +127,10 @@ function WatchList(props) {
             body: JSON.stringify(payload)
         }
         wcallFetch("/api/savewatchlist", options);
-        props.setShow(false)
+        setWatchList(false)
     }
-    if (props.show) {
-        if (props.show !== true) {
+    if (watchList) {
+        if (watchList !== true) {
             nameInput = (
                 <NameInput>
                     <SearchBar setSearchInput={setName} searchInput={name} />
@@ -138,9 +146,9 @@ function WatchList(props) {
 
 
     return (
-        <Container show={props.show} >
+        <Container show={watchList} >
 
-            <CloseButton onClick={() => props.setShow(false)}>X</CloseButton>
+            <CloseButton onClick={() => setWatchList(false)}>X</CloseButton>
 
             <List>
                 {nameInput}

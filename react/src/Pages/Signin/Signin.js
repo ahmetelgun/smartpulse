@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import useFetch from '@ahmetelgun/usefetch';
 import styled from 'styled-components';
 import { FullPageLoading } from '../../Globals/Animations'
@@ -6,6 +6,7 @@ import { useHistory } from "react-router-dom";
 import { setCookie } from '../../Globals/utils';
 import { AuthTextInput, AuthSubmit } from '../../Globals/Buttons.js'
 import { styles } from '../../Globals/Variables';
+import MyContext from '../../MyContext';
 const Container = styled.form`
     display: flex;
     margin-left: auto;
@@ -23,12 +24,14 @@ const Container = styled.form`
     }
 `;
 
-function Signin(props) {
+function Signin() {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const [loginError, setLoginError] = useState(null);
     const [data, loading, error, callFetch] = useFetch();
+    const { isLogin } = useContext(MyContext);
     let history = useHistory();
+
     function handleSubmit(e) {
         e.preventDefault()
         const options = {
@@ -41,7 +44,7 @@ function Signin(props) {
         setLoginError(null);
         callFetch("/api/signin", options)
     }
-    if (props.isLogin) {
+    if (isLogin) {
         history.push("/");
     }
     if (loading) {

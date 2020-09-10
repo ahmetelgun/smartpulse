@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import styled from 'styled-components';
 import { styles } from './Variables';
 import { Link, useHistory } from 'react-router-dom';
 import { ReactComponent as Logo } from './smartpulse-logo-12.svg'
-
+import MyContext from '../MyContext';
 const HeaderContainer = styled.div`
   height: ${styles.header_height}px;
   max-width: ${styles.header_width}px;
@@ -34,16 +34,16 @@ const HeaderMenu = styled.div`
   }
 `;
 
-const Header = (props) => {
-
+const Header = () => {
+  const { isLogin, setWatchList } = useContext(MyContext)
   const history = useHistory();
   function handleWatchList(e) {
     e.preventDefault();
-    if (!props.isLogin) {
+    if (!isLogin) {
       history.push("/signin")
     }
     else {
-      props.setWatchListShow(true);
+      setWatchList(true);
     }
   }
   const CompanyLogo = styled(Logo)`
@@ -57,7 +57,7 @@ const Header = (props) => {
       <Link to="/"><CompanyLogo /></Link>
       <HeaderMenu>
         {
-          props.isLogin ?
+          isLogin ?
             <><Link to="#" onClick={handleWatchList}>Takip Listesi</Link><Link to="/logout">Çıkış</Link></> :
             <><Link to="/signin">Giriş</Link><Link to="/signup">Kaydol</Link></>
         }

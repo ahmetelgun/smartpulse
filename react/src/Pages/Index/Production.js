@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import styled from 'styled-components';
 import Plot from 'react-plotly.js';
 import useFetch from '@ahmetelgun/usefetch';
@@ -7,7 +7,7 @@ import { AgGridReact } from 'ag-grid-react';
 
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-alpine.css';
-
+import MyContext from '../../MyContext';
 const Container = styled.div`
   height: 100%;
   display: flex;
@@ -100,21 +100,22 @@ const getUrgentList = (list, daily = true, name = "") => {
 
 
 
-const Production = (props) => {
+const Production = () => {
   const [data, loading, error, callFetch] = useFetch();
   const [isGraphicShow, setIsGraphicShow] = useState(false);
+  const { selectedCompanies, setSelectedCompanies, centralsUpdate, toggleCentralsUpdate, isLogin, selectedProductions, setSelectedProductions, productionUpdate, toggleProductionUpdate } = useContext(MyContext);
   useEffect(() => {
-    if (props.stations.length > 0) {
+    if (selectedProductions.length > 0) {
       const options = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(props.stations),
+        body: JSON.stringify(selectedProductions),
       }
       callFetch("/api/getproductiondata", options)
     }
-  }, [props.stations])
+  }, [productionUpdate])
   let content;
   if (loading) {
     content = <Loading />
@@ -193,7 +194,7 @@ const Production = (props) => {
     sheetList.sort((a, b) => (a.date > b.date) ? 1 : -1)
 
     let header = [{ headerName: "Tarih", field: "date", resizable: true, sortable: true }]
-    props.stations.forEach((station, index) => {
+    selectedProductions.forEach((station, index) => {
       let temp = { headerName: station.name, children: [] }
       station.types.forEach(item => {
         if (item == 2) {

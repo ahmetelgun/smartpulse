@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import styled from 'styled-components';
 import { styles } from '../../Globals/Variables';
 import { Loading } from "../../Globals/Animations";
@@ -6,6 +6,7 @@ import SideButton from './SideButton';
 import useFetch from '@ahmetelgun/usefetch';
 import SearchBar from '../../Globals/SearchBar';
 import SearchButton from '../../Globals/SearchButton';
+import MyContext from '../../MyContext';
 const Container = styled.div`
   display: flex;
   height: 100%;
@@ -66,9 +67,9 @@ const Arrow = styled.div`
 
 `;
 
-const SideList = (props) => {
+const SideList = () => {
   const [data, loading, error] = useFetch("/api/getorganizations");
-  const [companyList, setCompanyList] = useState([]);
+  const { selectedCompanies, setSelectedCompanies, centralsUpdate, toggleCentralsUpdate } = useContext(MyContext);
   const [searchInput, setSearchInput] = useState("");
   const [width, setWidth] = useState(350);
   const [isShow, setIsShow] = useState(true);
@@ -86,14 +87,14 @@ const SideList = (props) => {
     let notSelecteds = []
     data.data.forEach((item, index) => {
       if (item.organizationName.toUpperCase().indexOf(filter) > -1) {
-        if (companyList.includes(item.organizationETSOCode)) {
+        if (selectedCompanies.includes(item.organizationETSOCode)) {
           selecteds.push(
             <SideButton
-              setCompanyList={setCompanyList}
+              setSelectedCompanies={setSelectedCompanies}
               selected={true}
               key={index}
               onClick={
-                () => companyList.includes(item.organizationETSOCode) ? setCompanyList(companyList.filter(e => e !== item.organizationETSOCode)) : setCompanyList([...companyList, item.organizationETSOCode])}
+                () => selectedCompanies.includes(item.organizationETSOCode) ? setSelectedCompanies(selectedCompanies.filter(e => e !== item.organizationETSOCode)) : setSelectedCompanies([...selectedCompanies, item.organizationETSOCode])}
             >
               {item.organizationName}
             </SideButton>
@@ -101,11 +102,11 @@ const SideList = (props) => {
         } else {
           notSelecteds.push(
             <SideButton
-              setCompanyList={setCompanyList}
+              setSelectedCompanies={setSelectedCompanies}
               selected={false}
               key={index}
               onClick={
-                () => companyList.includes(item.organizationETSOCode) ? setCompanyList(companyList.filter(e => e !== item.organizationETSOCode)) : setCompanyList([...companyList, item.organizationETSOCode])}
+                () => selectedCompanies.includes(item.organizationETSOCode) ? setSelectedCompanies(selectedCompanies.filter(e => e !== item.organizationETSOCode)) : setSelectedCompanies([...selectedCompanies, item.organizationETSOCode])}
             >
               {item.organizationName}
             </SideButton>
@@ -136,7 +137,7 @@ const SideList = (props) => {
       <List width={width} isShow={isShow} >
         <SearchContainer >
           <SearchBar setSearchInput={setSearchInput} searchInput={searchInput} />
-          <SearchButton style={{ marginLeft: "auto" }} onClick={() => props.setSelectedCompanies(companyList)}>Karşılaştır</SearchButton>
+          <SearchButton style={{ marginLeft: "auto" }} onClick={() => toggleCentralsUpdate(!centralsUpdate)}>Karşılaştır</SearchButton>
         </SearchContainer>
         {content}
       </List>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import Signin from './Pages/Signin/Signin';
 import Signup from './Pages/Signup/Signup';
 import {
@@ -13,21 +13,21 @@ import { getCookie, setCookie } from "./Globals/utils";
 import Logout from './Pages/Logout/Logout';
 import WatchList from './Pages/WatchList/WatchList';
 import styled from "styled-components";
+import MyContext, { MyProvider } from './MyContext';
 const Container = styled.div`
-  filter: ${props => props.watchListShow ? "blur(3px)" : "blur(0px)"};
+  filter: ${props => props.watchList ? "blur(3px)" : "blur(0px)"};
   position: relative;
 `;
+
+
 const App = () => {
-  // eslint-disable-next-line
   const [data, loading, error, callFetch] = useFetch();
-  const [selectedCompanies, setSelectedCompanies] = useState([]);
-  const [stations, setStations] = useState([]);
-  const [isLogin, setIsLogin] = useState(false);
-  const [watchListShow, setWatchListShow] = useState(false);
+
+  const { isLogin, setIsLogin, watchList } = useContext(MyContext);
   let history = useLocation();
   let token = getCookie("token");
+
   useEffect(() => {
-    // eslint-disable-next-line
     token = getCookie("token")
     if (token) {
       const options = {
@@ -51,30 +51,33 @@ const App = () => {
   } else if (!token && isLogin) {
     setIsLogin(false);
   }
+
   return (
+
     <div style={{ position: "relative" }}>
-      <Container watchListShow={watchListShow}>
-        <Header isLogin={isLogin} setWatchListShow={setWatchListShow} />
+      <Container watchList={watchList}>
+        <Header />
         <Switch>
           <Route path="/signup">
             <Signup />
           </Route>
 
           <Route path="/signin">
-            <Signin isLogin={isLogin} />
+            <Signin />
           </Route>
 
           <Route path="/logout">
-            <Logout setIsLogin={setIsLogin} />
+            <Logout />
           </Route>
 
           <Route path="/">
-            <Index setWatchListShow={setWatchListShow} setSelectedCompanies={setSelectedCompanies} selectedCompanies={selectedCompanies} setStations={setStations} stations={stations} />
+            <Index />
           </Route>
         </Switch>
       </Container>
-      {watchListShow && <WatchList show={watchListShow} setShow={setWatchListShow} setStations={setStations} setSelectedCompanies={setSelectedCompanies} />}
+      {watchList && <WatchList />}
     </div>
+
   )
 };
 

@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import useFetch from '@ahmetelgun/usefetch';
 import styled from 'styled-components';
 import { FullPageLoading } from '../../Globals/Animations'
-import { useHistory } from "react-router-dom";
+import { useHistory, Redirect } from "react-router-dom";
 import { AuthTextInput, AuthSubmit } from '../../Globals/Buttons.js'
 import { styles } from '../../Globals/Variables';
+import MyContext from '../../MyContext';
+
+
 
 const Container = styled.form`
     display: flex;
@@ -34,6 +37,10 @@ function Signup() {
     const [data, loading, error, callFetch] = useFetch();
     const [passwordError, setPasswordError] = useState(null);
     const history = useHistory();
+    const { isLogin } = useContext(MyContext);
+    if (isLogin) {
+        return <Redirect to="/" />
+    }
     function handleSubmit(e) {
         e.preventDefault();
         if (password !== passwordConfirm) {

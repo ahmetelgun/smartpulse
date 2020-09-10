@@ -6,7 +6,7 @@ import { setCookie, getCookie } from '../../Globals/utils';
 import styled from 'styled-components';
 import { styles } from '../../Globals/Variables';
 
-function Logout(props) {
+function Logout() {
     const token = getCookie("token");
     const [data, loading, error, callFetch] = useFetch();
     const options = {

@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import styled from 'styled-components';
 import { styles } from '../../Globals/Variables';
 import useFetch from '@ahmetelgun/usefetch'
 import { Loading } from '../../Globals/Animations';
 import Select from 'react-select'
 import { useHistory } from 'react-router-dom';
-
+import MyContext from '../../MyContext';
 const Container = styled.div`
   height: 300px;
   padding: 15px;
@@ -81,22 +81,16 @@ const Main = styled.div`
 
 const OrganizationDetail = (props) => {
   const [data, loading, error, callFetch] = useFetch();
-  const [selectedCompanies, setSelectedCompanies] = useState();
-  const [selectedStations, setSelectedStations] = useState([]);
-  const [startDate, setStartDate] = useState(null);
-  const [endDate, setEndDate] = useState(null);
-  const [selectedType, setSelectedType] = useState([]);
+
+  const { selectedStations, setSelectedStations, selectedCompanies, startDate, setStartDate, endDate, setEndDate, selectedType, setSelectedType, centralsUpdate, selectedProductions, setSelectedProductions, productionUpdate, toggleProductionUpdate, setWatchList } = useContext(MyContext);
   var history = useHistory();
   useEffect(() => {
 
-    if (props.selectedCompanies.length > 0) {
-      setSelectedStations([])
-      callFetch(`/api/getcentrals?etso=${props.selectedCompanies.join()}`)
-        .then(() => {
-          setSelectedCompanies(props.selectedCompanies);
-        })
+    if (selectedCompanies.length > 0) {
+      setSelectedProductions([])
+      callFetch(`/api/getcentrals?etso=${selectedCompanies.join()}`)
     }
-  }, [props.selectedCompanies])
+  }, [centralsUpdate])
 
   let content;
 
@@ -107,7 +101,7 @@ const OrganizationDetail = (props) => {
     content = "error"
   }
 
-  else if (data && selectedCompanies === props.selectedCompanies) {
+  else if (data && selectedCompanies) {
     let main;
     if (data.data.length > 0) {
       const types = [
@@ -116,10 +110,10 @@ const OrganizationDetail = (props) => {
         { name: 'Arıza ve Bakım Bilgisi', value: 'urgent' }
       ]
 
-      const handleTypeChange = (types) => {
+      const handleTypeChange = (e) => {
         let values = []
-        if (types) {
-          types.forEach(element => {
+        if (e) {
+          e.forEach(element => {
             values.push(element.value)
           });
           values.sort()
@@ -139,34 +133,33 @@ const OrganizationDetail = (props) => {
       let options = data.data.map(organization => {
         return {
           label: organization.name,
-          options: organization.centrals.map(station => (
-            { value: station.id, label: station.name, eic: station.eic, etso: organization.etso }
+          options: organization.centrals.map(central => (
+            { value: central.id, label: central.name, eic: central.eic, etso: organization.etso }
           ))
         }
       });
-      const StationSelect = <Select isMulti options={options} onChange={e => setSelectedStations(e)} />
+      const CentralSelect = <Select isMulti options={options} onChange={e => setSelectedStations(e)} value={selectedStations} />
 
-      const TypeSelect = <Select isMulti options={types.map((type, index) => ({ label: type.name, value: index }))} onChange={handleTypeChange} />
+      const TypeSelect = <Select isMulti options={types.map((type, index) => ({ label: type.name, value: index }))} onChange={handleTypeChange} value={selectedType.map(type => ({ label: types[type].name, value: type }))} />
 
-      let stations;
-      if (selectedStations) {
-        stations = selectedStations.map(station => {
+      let centrals;
+      if (selectedStations.length > 0) {
+        centrals = selectedStations.map(central => {
           return {
-            name: station.label,
-            id: station.value,
-            eic: station.eic,
-            etso: station.etso,
+            name: central.label,
+            id: central.value,
+            eic: central.eic,
+            etso: central.etso,
             start: startDate,
             end: endDate,
             types: selectedType
           }
         })
-
       }
       main = (
         <Main>
 
-          {StationSelect}
+          {CentralSelect}
           {TypeSelect}
           <DateBox>
             <div>
@@ -174,17 +167,17 @@ const OrganizationDetail = (props) => {
               <span>Bitiş tarihi</span>
             </div>
             <div>
-              <input type="date" onChange={e => setStartDate(e.target.value)} />
-              <input type="date" onChange={e => setEndDate(e.target.value)} />
+              <input type="date" onChange={e => setStartDate(e.target.value)} value={startDate} />
+              <input type="date" onChange={e => setEndDate(e.target.value)} value={endDate} />
             </div>
             <Button
-              disabled={!(startDate && endDate && selectedStations != null && selectedType.length > 0)}
-              onClick={() => props.setStation(stations)}
+              disabled={!(startDate && endDate && selectedProductions != null && selectedType.length > 0)}
+              onClick={() => { setSelectedProductions(centrals); toggleProductionUpdate(!productionUpdate) }}
             >Ara</Button>
             <Button
               style={{ marginLeft: "auto" }}
-              disabled={!(startDate && endDate && selectedStations != null && selectedType.length > 0)}
-              onClick={() => props.setWatchList(stations)}
+              disabled={!(startDate && endDate && selectedProductions != null && selectedType.length > 0)}
+              onClick={() => setWatchList(centrals)}
             >Kaydet</Button>
           </DateBox>
         </Main>
