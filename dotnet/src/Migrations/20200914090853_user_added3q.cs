@@ -2,7 +2,7 @@
 
 namespace aspnetapp.Migrations
 {
-    public partial class user_added3341231 : Migration
+    public partial class user_added3q : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -39,7 +39,7 @@ namespace aspnetapp.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Stations",
+                name: "Centrals",
                 columns: table => new
                 {
                     id = table.Column<long>(nullable: false)
@@ -50,9 +50,9 @@ namespace aspnetapp.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Stations", x => x.id);
+                    table.PrimaryKey("PK_Centrals", x => x.id);
                     table.ForeignKey(
-                        name: "FK_Stations_Organizations_organizationId",
+                        name: "FK_Centrals_Organizations_organizationId",
                         column: x => x.organizationId,
                         principalTable: "Organizations",
                         principalColumn: "organizationId",
@@ -60,7 +60,7 @@ namespace aspnetapp.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Portfolios",
+                name: "WatchLists",
                 columns: table => new
                 {
                     id = table.Column<int>(nullable: false)
@@ -71,9 +71,9 @@ namespace aspnetapp.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Portfolios", x => x.id);
+                    table.PrimaryKey("PK_WatchLists", x => x.id);
                     table.ForeignKey(
-                        name: "FK_Portfolios_Users_useremail",
+                        name: "FK_WatchLists_Users_useremail",
                         column: x => x.useremail,
                         principalTable: "Users",
                         principalColumn: "email",
@@ -81,29 +81,29 @@ namespace aspnetapp.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Portfolios_useremail",
-                table: "Portfolios",
-                column: "useremail");
+                name: "IX_Centrals_organizationId",
+                table: "Centrals",
+                column: "organizationId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Stations_organizationId",
-                table: "Stations",
-                column: "organizationId");
+                name: "IX_WatchLists_useremail",
+                table: "WatchLists",
+                column: "useremail");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "Portfolios");
+                name: "Centrals");
 
             migrationBuilder.DropTable(
-                name: "Stations");
-
-            migrationBuilder.DropTable(
-                name: "Users");
+                name: "WatchLists");
 
             migrationBuilder.DropTable(
                 name: "Organizations");
+
+            migrationBuilder.DropTable(
+                name: "Users");
         }
     }
 }

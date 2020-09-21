@@ -17,8 +17,6 @@
 /source/obj/Debug/netcoreapp3.1/aspnetapp.dll
 /source/obj/Debug/netcoreapp3.1/aspnetapp.pdb
 /source/obj/Debug/netcoreapp3.1/aspnetapp.genruntimeconfig.cache
-/source/bin/Debug/netcoreapp3.1/test.json
-/source/bin/Debug/netcoreapp3.1/data.json
 /source/bin/Debug/netcoreapp3.1/Microsoft.Data.Sqlite.dll
 /source/bin/Debug/netcoreapp3.1/Microsoft.EntityFrameworkCore.dll
 /source/bin/Debug/netcoreapp3.1/Microsoft.EntityFrameworkCore.Relational.dll

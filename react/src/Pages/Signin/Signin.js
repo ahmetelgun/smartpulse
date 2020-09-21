@@ -5,7 +5,6 @@ import { FullPageLoading } from '../../Globals/Animations'
 import { useHistory } from "react-router-dom";
 import { setCookie } from '../../Globals/utils';
 import { AuthTextInput, AuthSubmit } from '../../Globals/Buttons.js'
-import { styles } from '../../Globals/Variables';
 import MyContext from '../../MyContext';
 const Container = styled.form`
     display: flex;

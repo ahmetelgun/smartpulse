@@ -9,14 +9,36 @@ using dotnet.Models;
 namespace aspnetapp.Migrations
 {
     [DbContext(typeof(SmartPulseContext))]
-    [Migration("20200907065822_user_added3")]
-    partial class user_added3
+    [Migration("20200914090853_user_added3q")]
+    partial class user_added3q
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "3.1.7");
+
+            modelBuilder.Entity("dotnet.Models.Central", b =>
+                {
+                    b.Property<long>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("eic")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("name")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("organizationId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("id");
+
+                    b.HasIndex("organizationId");
+
+                    b.ToTable("Centrals");
+                });
 
             modelBuilder.Entity("dotnet.Models.Organization", b =>
                 {
@@ -39,28 +61,6 @@ namespace aspnetapp.Migrations
                     b.HasKey("organizationId");
 
                     b.ToTable("Organizations");
-                });
-
-            modelBuilder.Entity("dotnet.Models.Station", b =>
-                {
-                    b.Property<long>("id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("eic")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("name")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("organizationId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("id");
-
-                    b.HasIndex("organizationId");
-
-                    b.ToTable("Stations");
                 });
 
             modelBuilder.Entity("dotnet.Models.User", b =>
@@ -110,7 +110,7 @@ namespace aspnetapp.Migrations
                     b.ToTable("WatchLists");
                 });
 
-            modelBuilder.Entity("dotnet.Models.Station", b =>
+            modelBuilder.Entity("dotnet.Models.Central", b =>
                 {
                     b.HasOne("dotnet.Models.Organization", "organization")
                         .WithMany()

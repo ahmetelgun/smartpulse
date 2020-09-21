@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useContext } from 'react';
 import styled from 'styled-components';
 import { styles } from '../../Globals/Variables';
 import useFetch from '@ahmetelgun/usefetch'
@@ -82,7 +82,7 @@ const Main = styled.div`
 const OrganizationDetail = (props) => {
   const [data, loading, error, callFetch] = useFetch();
 
-  const { selectedStations, setSelectedStations, selectedCompanies, startDate, setStartDate, endDate, setEndDate, selectedType, setSelectedType, centralsUpdate, selectedProductions, setSelectedProductions, productionUpdate, toggleProductionUpdate, setWatchList } = useContext(MyContext);
+  const { isLogin, selectedStations, setSelectedStations, selectedCompanies, startDate, setStartDate, endDate, setEndDate, selectedType, setSelectedType, centralsUpdate, selectedProductions, setSelectedProductions, productionUpdate, toggleProductionUpdate, setWatchList } = useContext(MyContext);
   var history = useHistory();
   useEffect(() => {
 
@@ -90,6 +90,7 @@ const OrganizationDetail = (props) => {
       setSelectedProductions([])
       callFetch(`/api/getcentrals?etso=${selectedCompanies.join()}`)
     }
+    // eslint-disable-next-line
   }, [centralsUpdate])
 
   let content;
@@ -124,10 +125,10 @@ const OrganizationDetail = (props) => {
         }
       }
       function handleSaveClick() {
-        if (!props.isLogin) {
-          history.push("/login")
+        if (!isLogin) {
+          history.push("/signin");
         } else {
-
+          setWatchList(centrals);
         }
       }
       let options = data.data.map(organization => {
@@ -143,18 +144,31 @@ const OrganizationDetail = (props) => {
       const TypeSelect = <Select isMulti options={types.map((type, index) => ({ label: type.name, value: index }))} onChange={handleTypeChange} value={selectedType.map(type => ({ label: types[type].name, value: type }))} />
 
       let centrals;
+
       if (selectedStations.length > 0) {
-        centrals = selectedStations.map(central => {
-          return {
-            name: central.label,
-            id: central.value,
-            eic: central.eic,
-            etso: central.etso,
-            start: startDate,
-            end: endDate,
-            types: selectedType
-          }
-        })
+        centrals = {
+          start: startDate,
+          end: endDate,
+          types: selectedType,
+          organizations: data.data.filter(organization => {
+            if (selectedStations.filter(central => central.etso == organization.etso).length > 0) {
+              return true;
+            }
+          })
+            .map(organization => {
+              return {
+                name: organization.name,
+                etso: organization.etso,
+                centrals: selectedStations
+                  .filter(central => central.etso == organization.etso)
+                  .map(central => ({
+                    id: central.value,
+                    name: central.label,
+                    eic: central.eic
+                  }))
+              }
+            })
+        }
       }
       main = (
         <Main>
@@ -177,7 +191,7 @@ const OrganizationDetail = (props) => {
             <Button
               style={{ marginLeft: "auto" }}
               disabled={!(startDate && endDate && selectedProductions != null && selectedType.length > 0)}
-              onClick={() => setWatchList(centrals)}
+              onClick={handleSaveClick}
             >Kaydet</Button>
           </DateBox>
         </Main>

@@ -23,6 +23,7 @@ using System.IdentityModel.Tokens.Jwt;
 using Microsoft.Extensions.Configuration;
 using System.ComponentModel.DataAnnotations;
 using System.Drawing;
+using System.Diagnostics;
 
 
 
@@ -45,11 +46,11 @@ namespace dotnet.Controllers
     public class GetCentrals : ControllerBase
     {
         [HttpGet]
-        public ActionResult<List<CentralList>> Get(string etso)
+        public ActionResult<List<OrganizationShortDefine>> Get(string etso)
         {
             var db = new SmartPulseContext();
             string[] etsos = etso.Split(",");
-            List<CentralList> listOfCentrals = new List<CentralList>();
+            List<OrganizationShortDefine> listOfCentrals = new List<OrganizationShortDefine>();
             foreach (var etsoCode in etsos)
             {
                 Organization organization = db.Organizations.Where(x => x.organizationETSOCode == etsoCode).FirstOrDefault();
@@ -79,7 +80,7 @@ namespace dotnet.Controllers
                         name = s.name,
                         eic = s.eic
                     }).ToList();
-                    CentralList centralTemp = new CentralList
+                    OrganizationShortDefine centralTemp = new OrganizationShortDefine
                     {
                         centrals = centralList,
                         name = organization.organizationName,
@@ -98,42 +99,121 @@ namespace dotnet.Controllers
     public class GetProductionData : ControllerBase
     {
         [HttpPost]
-        public IActionResult Post([FromBody] List<Production> t)
+        public IActionResult Post([FromBody] ProductionRequest t)
         {
-            List<Task> requestList = new List<Task>();
-            List<ProductionData> productionDataList = new List<ProductionData>();
-            Parallel.ForEach(t, item =>
-           {
-               ProductionData productionData = new ProductionData();
-               Parallel.ForEach(item.types, type =>
-             {
-                 if (type == 0)
-                 {
-                     string kgupString = Api.GetRequest($"https://seffaflik.epias.com.tr/transparency/service/production/dpp?organizationEIC={item.etso}&uevcbEIC={item.eic}&startDate={item.start}&endDate={item.end}");
-                     JsonElement json = JsonDocument.Parse(kgupString).RootElement;
-                     productionData.kgup = json.GetProperty("body");
-                 }
-                 else if (type == 1)
-                 {
-                     string eakString = Api.GetRequest($"https://seffaflik.epias.com.tr/transparency/service/production/aic?organizationEIC={item.etso}&uevcbEIC={item.eic}&startDate={item.start}&endDate={item.end}");
-                     JsonElement json = JsonDocument.Parse(eakString).RootElement;
-                     productionData.eak = json.GetProperty("body");
-                 }
-                 else if (type == 2)
-                 {
-                     string urgentString = Api.GetRequest($"https://seffaflik.epias.com.tr/transparency/service/production/urgent-market-message?startDate={item.start}&endDate={item.end}&regionId=1&uevcbId={item.id}");
-                     JsonElement json = JsonDocument.Parse(urgentString).RootElement;
-                     productionData.urgent = json.GetProperty("body");
-                 }
-             });
-
-               productionData.name = item.name;
-               productionDataList.Add(productionData);
-
-           });
+            List<OrganizationProductions> organizationProductionsList = new List<OrganizationProductions>();
 
 
-            return Ok(productionDataList);
+            Parallel.ForEach(t.organizations, organization =>
+            {
+                OrganizationProductions organizationProductions = new OrganizationProductions();
+                List<CentralProductions> centralProductionsList = new List<CentralProductions>();
+                Parallel.ForEach(organization.centrals, central =>
+                {
+                    CentralProductions centralProductions = new CentralProductions();
+                    Parallel.ForEach(t.types, type =>
+                    {
+                        if (type == 0)
+                        {
+                            string kgupString = Api.GetRequest($"https://seffaflik.epias.com.tr/transparency/service/production/dpp?organizationEIC={organization.etso}&uevcbEIC={central.eic}&startDate={t.start}&endDate={t.end}");
+                            JsonElement json = JsonDocument.Parse(kgupString).RootElement;
+                            var kgoek = new KgupOrEak();
+                            foreach (var hour in json.GetProperty("body").GetProperty("dppList").EnumerateArray())
+                            {
+                                var field = new KgupOrEakField
+                                {
+                                    date = hour.GetProperty("tarih").GetString(),
+                                    sum = hour.GetProperty("toplam").GetDouble()
+                                };
+                                kgoek.hourly.Add(field);
+                            }
+                            kgoek.hourly = kgoek.hourly.OrderBy(o => o.date).ToList();
+                            foreach (var day in json.GetProperty("body").GetProperty("statistics").EnumerateArray())
+                            {
+                                var field = new KgupOrEakField
+                                {
+                                    date = day.GetProperty("tarih").GetString(),
+                                    sum = day.GetProperty("toplamSum").GetDouble()
+                                };
+                                kgoek.daily.Add(field);
+                            }
+                            kgoek.daily = kgoek.daily.OrderBy(o => o.date).ToList();
+                            centralProductions.types.kgup = kgoek;
+                        }
+                        else if (type == 1)
+                        {
+                            string eakString = Api.GetRequest($"https://seffaflik.epias.com.tr/transparency/service/production/aic?organizationEIC={organization.etso}&uevcbEIC={central.eic}&startDate={t.start}&endDate={t.end}");
+                            JsonElement json = JsonDocument.Parse(eakString).RootElement;
+                            var kgoek = new KgupOrEak();
+                            foreach (var hour in json.GetProperty("body").GetProperty("aicList").EnumerateArray())
+                            {
+                                var field = new KgupOrEakField
+                                {
+                                    date = hour.GetProperty("tarih").GetString(),
+                                    sum = hour.GetProperty("toplam").GetDouble()
+                                };
+                                kgoek.hourly.Add(field);
+                            }
+                            kgoek.hourly = kgoek.hourly.OrderBy(o => o.date).ToList();
+                            foreach (var day in json.GetProperty("body").GetProperty("statistics").EnumerateArray())
+                            {
+                                var field = new KgupOrEakField
+                                {
+                                    date = day.GetProperty("tarih").GetString(),
+                                    sum = day.GetProperty("toplamSum").GetDouble()
+                                };
+                                kgoek.daily.Add(field);
+                            }
+                            kgoek.daily = kgoek.daily.OrderBy(o => o.date).ToList();
+                            centralProductions.types.eak = kgoek;
+                        }
+                        else if (type == 2)
+                        {
+                            string urgentString = Api.GetRequest($"https://seffaflik.epias.com.tr/transparency/service/production/urgent-market-message?startDate={t.start}&endDate={t.end}&regionId=1&uevcbId={central.id}");
+                            JsonElement json = JsonDocument.Parse(urgentString).RootElement;
+                            List<Urgent> urgents = new List<Urgent>();
+                            foreach (var u in json.GetProperty("body").GetProperty("urgentMarketMessageList").EnumerateArray())
+                            {
+                                var urgent = new Urgent
+                                {
+                                    urgentStartDate = u.GetProperty("caseStartDate").GetString(),
+                                    hourly = new List<UrgentField>()
+                                };
+                                foreach (var h in u.GetProperty("faultDetails").EnumerateArray())
+                                {
+                                    var urgentField = new UrgentField
+                                    {
+                                        date = h.GetProperty("date").GetString(),
+                                        powerLoss = h.GetProperty("faultCausedPowerLoss").GetDouble()
+                                    };
+                                    urgent.hourly.Add(urgentField);
+                                }
+                                urgent.hourly = urgent.hourly.OrderBy(o => o.date).ToList();
+
+                                urgent.type = u.GetProperty("messageType").GetInt32();
+                                urgent.reason = u.GetProperty("reason").GetString();
+                                urgents.Add(urgent);
+                            }
+                            centralProductions.types.urgent = urgents;
+                        }
+                    });
+                    centralProductions.name = central.name;
+                    centralProductions.id = central.id;
+                    centralProductions.eic = central.eic;
+                    centralProductionsList.Add(centralProductions);
+                });
+                organizationProductions.name = organization.name;
+                organizationProductions.etso = organization.etso;
+                organizationProductions.centralProductions = centralProductionsList;
+                organizationProductionsList.Add(organizationProductions);
+            });
+            return Ok(organizationProductionsList);
+
+
+
+
+
+
         }
     }
 
@@ -229,6 +309,7 @@ namespace dotnet.Controllers
         [HttpPost]
         public IActionResult Post([FromBody] User user)
         {
+            Thread.Sleep(3000);
             var db = new SmartPulseContext();
             var temp = db.Users.Where(u => u.token == user.token).FirstOrDefault();
             if (temp != null)
@@ -261,7 +342,8 @@ namespace dotnet.Controllers
                     db.SaveChanges();
                     return Ok(new { message = "update success" });
                 }
-                watchList.user = user;
+                var thisUser = db.Users.FirstOrDefault(u => u.email == user.email);
+                watchList.user = thisUser;
                 db.WatchLists.Add(watchList);
                 db.SaveChanges();
                 return Ok(new { message = "success" });
@@ -307,7 +389,115 @@ namespace dotnet.Controllers
         }
 
     }
+
+
+    [Route("/api/removewatchlist")]
+    public class DeleteWatchList : ControllerBase
+    {
+        [HttpGet]
+        public IActionResult Post(string name)
+        {
+            var auth = new AuthenticationController();
+            var db = new SmartPulseContext();
+            var token = Request.Cookies["token"];
+            var user = auth.isLogin(token);
+            if (user != null)
+            {
+                if (name != null)
+                {
+                    var watch = db.WatchLists.FirstOrDefault(w => w.name == name && w.user.email == user.email);
+                    if (watch != null)
+                    {
+                        db.Remove(watch);
+                        db.SaveChanges();
+                        return Ok(new { message = "success" });
+                    }
+                }
+            }
+            return BadRequest("qwe");
+
+        }
+    }
+
+    [Route("/api/savesheet")]
+    public class ImportSheet : ControllerBase
+    {
+        [HttpPost]
+        public IActionResult Post([FromBody] SavedGrid grid)
+        {
+            var auth = new AuthenticationController();
+            var db = new SmartPulseContext();
+            var token = Request.Cookies["token"];
+            var user = auth.isLogin(token);
+            if (user != null)
+            {
+                var exist = db.SavedGrids.FirstOrDefault(g => g.name == grid.name && g.user.email == user.email);
+                if (exist != null)
+                {
+                    exist.header = grid.header;
+                    exist.rows = grid.rows;
+                    db.SaveChanges();
+                    return Ok(new { message = "success" });
+                }
+                var thisUser = db.Users.FirstOrDefault(u => u.email == user.email);
+                grid.user = thisUser;
+                db.SavedGrids.Add(grid);
+                db.SaveChanges();
+                return Ok(new { message = "success" });
+            }
+            return Unauthorized(new { message = "unauthorized" });
+        }
+    }
+
+
+
+    [Route("/api/getsheet")]
+    public class GetSheet : ControllerBase
+    {
+        [HttpGet]
+        public IActionResult Post(string name)
+        {
+            var auth = new AuthenticationController();
+            var db = new SmartPulseContext();
+            var token = Request.Cookies["token"];
+            var user = auth.isLogin(token);
+            if (user != null)
+            {
+                var grid = db.SavedGrids.FirstOrDefault(g => g.name == name && g.user.email == user.email);
+                if (grid != null)
+                {
+                    return Ok(grid);
+                }
+                else
+                {
+                    return NotFound(new { message = "not found" });
+                }
+            }
+            return Unauthorized(new { message = "unauthorized" });
+        }
+    }
+
+
+    [Route("/api/getsheetlist")]
+    public class GetSheetList : ControllerBase
+    {
+        [HttpGet]
+        public IActionResult Post()
+        {
+            var auth = new AuthenticationController();
+            var db = new SmartPulseContext();
+            var token = Request.Cookies["token"];
+            var user = auth.isLogin(token);
+            if (user != null)
+            {
+                var grids = db.SavedGrids.Where(g => g.user.email == user.email).Select(s => new
+                {
+                    name = s.name
+                }).ToList();
+                return Ok(grids);
+            }
+            return Unauthorized(new { message = "unauthorized" });
+        }
+    }
+
 }
-
-
-

@@ -1,9 +1,11 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import styled from 'styled-components';
 import { styles } from './Variables';
 import { Link, useHistory } from 'react-router-dom';
 import { ReactComponent as Logo } from './smartpulse-logo-12.svg'
 import MyContext from '../MyContext';
+import XLSX from 'xlsx';
+
 const HeaderContainer = styled.div`
   height: ${styles.header_height}px;
   max-width: ${styles.header_width}px;
@@ -34,8 +36,16 @@ const HeaderMenu = styled.div`
   }
 `;
 
+const CompanyLogo = styled.div`
+  width: 200px;
+  @media(max-width: ${styles.mobile_width}px){
+    width: 100px;
+  }
+`;
+
 const Header = () => {
   const { isLogin, setWatchList } = useContext(MyContext)
+  const [file, setFile] = useState()
   const history = useHistory();
   function handleWatchList(e) {
     e.preventDefault();
@@ -46,15 +56,15 @@ const Header = () => {
       setWatchList(true);
     }
   }
-  const CompanyLogo = styled(Logo)`
-    width: 200px;
-    @media(max-width: ${styles.mobile_width}px){
-      width: 100px;
-    }
-  `;
+
+
+
+
+
+
   return (
     <HeaderContainer>
-      <Link to="/"><CompanyLogo /></Link>
+      <Link to="/" ><CompanyLogo ><Logo /></CompanyLogo></Link>
       <HeaderMenu>
         {
           isLogin ?

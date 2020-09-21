@@ -4,7 +4,6 @@ import styled from 'styled-components';
 import { FullPageLoading } from '../../Globals/Animations'
 import { useHistory, Redirect } from "react-router-dom";
 import { AuthTextInput, AuthSubmit } from '../../Globals/Buttons.js'
-import { styles } from '../../Globals/Variables';
 import MyContext from '../../MyContext';
 
 

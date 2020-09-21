@@ -8,6 +8,11 @@ import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-alpine.css';
 import MyContext from '../../MyContext';
+import { styles } from '../../Globals/Variables';
+import XLSX from 'xlsx';
+import { HeaderRowComp, GridApi } from 'ag-grid-community';
+import { useHistory } from 'react-router-dom';
+
 const Container = styled.div`
   height: 100%;
   display: flex;
@@ -86,26 +91,49 @@ const getUrgentList = (list, daily = true, name = "") => {
     list.forEach((element, index) => {
       element.faultDetails.forEach((fault, faultIndex) => {
         if (hourlyList[fault.date]) {
-          hourlyList[fault.date][name + " " + "urgent"] = fault.faultCausedPowerLoss
-          hourlyList[fault.date][name + " " + "reason"] = element.reason
+          hourlyList[fault.date][`${name} urgent`] = fault.faultCausedPowerLoss
+          hourlyList[fault.date][`${name} reason`] = element.reason
         } else {
           hourlyList[fault.date] = {}
-          hourlyList[fault.date][name + " " + "urgent"] = fault.faultCausedPowerLoss
-          hourlyList[fault.date][name + " " + "reason"] = element.reason
+          hourlyList[fault.date][`${name} urgent`] = fault.faultCausedPowerLoss
+          hourlyList[fault.date][`${name} reason`] = element.reason
         }
       })
     })
   }
 }
 
+const Tab = styled.div`
+  height: 20px;
+  display: flex;
+  margin-right: auto;
+  button{
+  width: 70px;
+  border-radius: 3px;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    :hover{
+    background-color: #bbbbbb;
+  }
+  }
+`;
 
 
 const Production = () => {
-  const [data, loading, error, callFetch] = useFetch();
+  let [data, loading, error, callFetch] = useFetch();
   const [isGraphicShow, setIsGraphicShow] = useState(false);
-  const { selectedCompanies, setSelectedCompanies, centralsUpdate, toggleCentralsUpdate, isLogin, selectedProductions, setSelectedProductions, productionUpdate, toggleProductionUpdate } = useContext(MyContext);
+  const [gridApi, setGridApi] = useState();
+  let { selectedProductions, productionUpdate, isLogin } = useContext(MyContext);
+  const [gridName, setGridName] = useState("");
+  const [selectedGrid, setSelectedGrid] = useState()
+  const [file, setFile] = useState()
+  const [gridList, setGridList] = useState([]);
+  const [rows, setRows] = useState()
+  const history = useHistory();
   useEffect(() => {
-    if (selectedProductions.length > 0) {
+    if (selectedProductions.organizations && selectedProductions.organizations.length > 0) {
       const options = {
         method: 'POST',
         headers: {
@@ -114,7 +142,9 @@ const Production = () => {
         body: JSON.stringify(selectedProductions),
       }
       callFetch("/api/getproductiondata", options)
+
     }
+    // eslint-disable-next-line
   }, [productionUpdate])
   let content;
   if (loading) {
@@ -124,36 +154,37 @@ const Production = () => {
     content = "error";
   }
   if (data) {
-
     //////////  PLOT  //////////
-    let plotData = [];
-    data.data.forEach(item => {
-      Object.keys(item).forEach(type => {
-        if (type === "urgent") {
-          var temp = getUrgentList(item[type].urgentMarketMessageList, true)
-          temp = {
-            ...temp,
-            type: 'scatter',
-            mode: 'markers',
-            name: item.name + " " + type
+
+    var lines = []
+    data.data.forEach(organization => {
+      organization.centralProductions.forEach(central => {
+        Object.keys(central.types).forEach(type => {
+          if (type != "urgent") {
+            let line = { x: [], y: [], type: 'scatter', mode: 'lines+markers', name: `${central.name} ${type}` }
+            central.types[type].daily.forEach(day => {
+              line.x.push(day.date);
+              line.y.push(day.sum)
+            })
+            lines.push(line);
+          } else {
+            let line = { x: [], y: [], type: 'scatter', mode: 'markers', name: `${central.name} ${type}` }
+            central.types[type].forEach(urgent => {
+              line.x.push(`${urgent.urgentStartDate.split("T")[0]}T00:00:00.000+0300`)
+              let s = 0;
+              urgent.hourly.forEach(h => {
+                s = s + h.powerLoss;
+              })
+              line.y.push(s);
+            });
+            lines.push(line);
+
           }
-          plotData.push(temp);
-        }
-        else if (type === "eak" || type === "kgup") {
-          var temp = getList(item[type].statistics, true, type)
-          temp = {
-            ...temp,
-            type: 'scatter',
-            mode: 'lines+markers',
-            name: item.name + " " + type
-          }
-          plotData.push(temp);
-        }
+        })
       })
     })
-
     const plot = <Plot
-      data={plotData}
+      data={lines}
       layout={{
         // autosize: true,
         title: false
@@ -161,69 +192,202 @@ const Production = () => {
       useResizeHandler={true}
       style={{ width: "100%", height: "100%" }}
     />
-    //////////  END PLOT  //////////
+    //////////  PLOT END  //////////
+
 
     //////////  SHEET  //////////
-    const types = [
-      { "kgup": "KGUP" },
-      { "eak": "EAK" },
-      { "urgent": "Arıza", "reason": "Ariza Nedeni" }
-    ]
-    data.data.forEach((item, index) => {
-      Object.keys(item).forEach(type => {
-        if (type === "urgent") {
-          getUrgentList(item[type].urgentMarketMessageList, false, index);
-        } else if (type === "kgup") {
-          getList(item[type].dppList, false, index + " " + type);
-        } else if (type === "eak") {
-          getList(item[type].aicList, false, index + " " + type);
-        }
+    let headers = [{ headerName: "Tarih", field: "date", resizable: true, sortable: true }]
+    data.data.forEach(organization => {
+      organization.centralProductions.forEach(central => {
+        headers.push({
+          headerName: central.name, resizable: true, sortable: true, children: Object.keys(central.types).map(type => {
+            if (type == "urgent") {
+              return { headerName: "Kayıp", field: `${central.id} ${type}`, resizable: true, sortable: true, editable: true }
+            }
+            return { headerName: type.toUpperCase(), field: `${central.id} ${type}`, resizable: true, sortable: true, editable: true }
+          })
+        })
       })
     })
 
-    const formatDate = (date) => {
-      const d = date.split("T")
-      const hour = d[1].split(":")[0]
-      const minute = d[1].split(":")[1]
-      return d[0] + " " + hour + ":" + minute
+    let rowDatas = [];
+    data.data.forEach(organization => {
+      organization.centralProductions.forEach(central => {
+        Object.keys(central.types).forEach(type => {
+          if (type != "urgent") {
+            central.types[type].hourly.forEach(hour => {
+              var temp = rowDatas.filter(row => hour.date.slice(0, 16).replace("T", " ") == row.date);
+              if (temp.length > 0) {
+                rowDatas[rowDatas.indexOf(temp[0])][`${central.id} ${type}`] = hour.sum
+              }
+              else {
+                rowDatas.push({ date: `${hour.date.slice(0, 16).replace("T", " ")}`, [`${central.id} ${type}`]: hour.sum })
+              }
+            })
+          } else {
+            central.types[type].forEach(urgent => {
+              urgent.hourly.forEach(hour => {
+                var temp = rowDatas.filter(row => hour.date.slice(0, 16).replace("T", " ") == row.date);
+                if (temp.length > 0) {
+                  rowDatas[rowDatas.indexOf(temp[0])][`${central.id} ${type}`] = hour.powerLoss
+                }
+                else {
+                  rowDatas.push({ date: hour.date.slice(0, 16).replace("T", " "), [`${central.id} ${type}`]: hour.powerLoss })
+                }
+              })
+            })
+          }
+        })
+      })
+    })
+    if (rows == null || JSON.stringify(rows) != JSON.stringify(rowDatas)) {
+      setRows(rowDatas)
     }
-
-    let sheetList = Object.keys(hourlyList).map(item => {
-      return { ...hourlyList[item], date: formatDate(item) }
-    })
-    sheetList.sort((a, b) => (a.date > b.date) ? 1 : -1)
-
-    let header = [{ headerName: "Tarih", field: "date", resizable: true, sortable: true }]
-    selectedProductions.forEach((station, index) => {
-      let temp = { headerName: station.name, children: [] }
-      station.types.forEach(item => {
-        if (item == 2) {
-          temp.children.push({ headerName: Object.values(types[item])[0], field: index + " " + Object.keys(types[item])[0], resizable: true, sortable: true })
-          temp.children.push({ headerName: Object.values(types[item])[1], field: index + " " + Object.keys(types[item])[1], resizable: true, sortable: true })
-        } else {
-          temp.children.push({ headerName: Object.values(types[item])[0], field: index + " " + Object.keys(types[item])[0], resizable: true, sortable: true })
-        }
-
-      })
-      header.push(temp);
-    })
-
 
     const sheet = <div className="ag-theme-alpine" style={{ height: '100%', width: '100%' }}>
       <AgGridReact
-        columnDefs={header}
-        rowData={sheetList}
+        columnDefs={headers}
+        rowData={rows}
+        onGridReady={e => { setGridApi(e.api); if (isLogin) { getGridList(); } }}
       ></AgGridReact></div>
+    //////////  SHEET END  //////////
 
 
-    //////////  END SHEET  //////////
+    function handleExport(e) {
+      var str = gridApi.getDataAsCsv().replaceAll('"', "").replaceAll('\r', "")
+      var rows = str.split("\n");
+      let rowData = []
+      rows.forEach(row => {
+        rowData.push(row.split(","))
+      })
+
+      let types = Object.keys(data.data[0].centralProductions[0].types);
+      let headers = [null]
+      let merges = []
+      data.data.forEach(organization => {
+        organization.centralProductions.forEach(central => {
+          var s = { r: 0, c: headers.length }
+          types.forEach((type, index) => {
+            if (index == 0) {
+              headers.push(central.name)
+            } else {
+              headers.push(null)
+            }
+          })
+          var e = { r: 0, c: headers.length - 1 }
+          merges.push({ s, e })
+        })
+      })
+      rowData.unshift(headers)
+      var wb = XLSX.utils.book_new();
+      var ws = XLSX.utils.aoa_to_sheet(rowData);
+      ws["!merges"] = merges;
+      wb.SheetNames.push("Test Sheet");
+      wb.Sheets["Test Sheet"] = ws;
+      XLSX.writeFile(wb, "sheetjs.xlsx");
+    }
+
+    function handleSave() {
+      if (!isLogin) {
+        history.push("/signin");
+        return
+      }
+      fetch("/api/savesheet", {
+        method: "POST",
+        headers: {
+          "Content-type": "application/json"
+        },
+        body: JSON.stringify({ name: gridName, header: JSON.stringify(headers), rows: JSON.stringify(rows) })
+      }).then(r => r.json()).then(j => {
+        if (j.message && j.message == "success") {
+          alert("Basariyla kaydedildi");
+          getGridList()
+        }
+      })
+    }
+
+
+
+    function handleImport() {
+      var fields = []
+      headers.forEach((header, index) => {
+        if (index == 0) {
+          fields.push(header.field)
+        } else {
+          header.children.forEach(c => {
+            fields.push(c.field)
+          })
+        }
+      })
+      let temp = []
+      var reader = new FileReader();
+      reader.readAsArrayBuffer(file);
+      reader.onload = function (e) {
+        var data = new Uint8Array(reader.result);
+        var workbook = XLSX.read(data, { type: 'array' });
+        var sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const str = XLSX.utils.sheet_to_csv(sheet);
+        const rows = str.split('\n')
+        rows.splice(0, 2)
+        rows.forEach(row => {
+          var t = {}
+          row.split(",").forEach((f, index) => {
+            t[fields[index]] = f;
+          })
+          temp.push(t)
+
+        })
+        setRows(temp)
+      }
+    }
+
+    function getGridList() {
+      fetch("/api/getsheetlist").then(r => r.json()).then(j => {
+        setGridList(j.map((g, index) => {
+          if (index == 0) {
+            setSelectedGrid(g.name)
+          }
+          return <option value={g.name} >{g.name}</option>
+        }));
+      })
+    }
+
+    function getGrid() {
+      fetch(`/api/getsheet?name=${selectedGrid}`).then(r => r.json()).then(j => {
+        gridApi.setColumnDefs(JSON.parse(j.header));
+        gridApi.setRowData(JSON.parse(j.rows))
+      })
+    }
 
     content = (
       <>
-        <div style={{ display: "flex" }}>
-          <button onClick={() => setIsGraphicShow(false)}>Liste</button>
-          <button onClick={() => setIsGraphicShow(true)}>Grafik</button>
-        </div>
+        <Tab>
+          <button style={{ backgroundColor: isGraphicShow ? "white" : "#bbbbbb" }} onClick={() => setIsGraphicShow(false)}>Liste</button>
+          <button style={{ backgroundColor: isGraphicShow ? "#bbbbbb" : "white" }} onClick={() => setIsGraphicShow(true)}>Grafik</button>
+          {!isGraphicShow &&
+            <>
+              <input type="file" onChange={e => setFile(e.target.files[0])} />
+              <button onClick={handleImport}>Yukle</button>
+              <button onClick={handleExport}>Indir</button>
+
+              {gridList.length > 0 &&
+
+                <>
+                  <select onChange={e => setSelectedGrid(e.target.value)}>
+                    {gridList}
+                  </select>
+                  <button onClick={getGrid}>Getir</button>
+                </>
+              }
+
+              <div style={{ marginLeft: "auto", display: "flex" }}>
+                <input type="text" placeholder="Grid ismi" value={gridName} onChange={e => setGridName(e.target.value)} />
+                <button disabled={gridName == ""} onClick={handleSave}>Kaydet</button>
+              </div>
+            </>
+          }
+
+        </Tab>
         {isGraphicShow ? plot : sheet}
       </>
     )

@@ -9,8 +9,8 @@ using dotnet.Models;
 namespace aspnetapp.Migrations
 {
     [DbContext(typeof(SmartPulseContext))]
-    [Migration("20200908192157_user_added3q")]
-    partial class user_added3q
+    [Migration("20200920211806_user_added3q234")]
+    partial class user_added3q234
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -61,6 +61,31 @@ namespace aspnetapp.Migrations
                     b.HasKey("organizationId");
 
                     b.ToTable("Organizations");
+                });
+
+            modelBuilder.Entity("dotnet.Models.SavedGrid", b =>
+                {
+                    b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("header")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("name")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("rows")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("useremail")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("id");
+
+                    b.HasIndex("useremail");
+
+                    b.ToTable("SavedGrids");
                 });
 
             modelBuilder.Entity("dotnet.Models.User", b =>
@@ -115,6 +140,13 @@ namespace aspnetapp.Migrations
                     b.HasOne("dotnet.Models.Organization", "organization")
                         .WithMany()
                         .HasForeignKey("organizationId");
+                });
+
+            modelBuilder.Entity("dotnet.Models.SavedGrid", b =>
+                {
+                    b.HasOne("dotnet.Models.User", "user")
+                        .WithMany()
+                        .HasForeignKey("useremail");
                 });
 
             modelBuilder.Entity("dotnet.Models.WatchList", b =>

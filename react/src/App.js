@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useContext } from "react";
 import Signin from './Pages/Signin/Signin';
 import Signup from './Pages/Signup/Signup';
 import {
@@ -13,21 +13,27 @@ import { getCookie, setCookie } from "./Globals/utils";
 import Logout from './Pages/Logout/Logout';
 import WatchList from './Pages/WatchList/WatchList';
 import styled from "styled-components";
-import MyContext, { MyProvider } from './MyContext';
+import MyContext from './MyContext';
+import { styles } from "./Globals/Variables";
+
 const Container = styled.div`
   filter: ${props => props.watchList ? "blur(3px)" : "blur(0px)"};
   position: relative;
 `;
 
 
+
 const App = () => {
-  const [data, loading, error, callFetch] = useFetch();
+  const [data, , , callFetch] = useFetch();
 
   const { isLogin, setIsLogin, watchList } = useContext(MyContext);
   let history = useLocation();
   let token = getCookie("token");
 
+
   useEffect(() => {
+
+    // eslint-disable-next-line
     token = getCookie("token")
     if (token) {
       const options = {

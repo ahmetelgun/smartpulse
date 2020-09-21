@@ -4,7 +4,7 @@ import useFetch from '@ahmetelgun/usefetch';
 import SearchBar from '../../Globals/SearchBar';
 import SearchButton from '../../Globals/SearchButton';
 import MyContext from '../../MyContext';
-
+import { ReactComponent as Bin } from './bin.svg';
 const Container = styled.div`
     display: ${props => props.show ? "block" : "none"};
     position: absolute;
@@ -58,6 +58,18 @@ const WatchBox = styled.label`
     input:checked + span {
         border-color: #009BA2;
 }
+    button{
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        right: 0;
+        padding: 5px;
+        background-color: transparent;
+    }
+    svg{
+        width: 18px;
+        height: 18px;
+    }
 `;
 const List = styled.div`
     margin: 30px 10px;
@@ -72,21 +84,23 @@ const NameInput = styled.div`
 
 
 function WatchList() {
-    const [data, loading, error, callFetch] = useFetch();
-    const [wdata, wloading, werror, wcallFetch] = useFetch();
+    const [data, , , callFetch] = useFetch();
+    const [wdata, , , wcallFetch] = useFetch();
     const [selected, setSelected] = useState(null);
     const [name, setName] = useState(null);
+    const [update, toggleUpdate] = useState(false);
     const { setSelectedStations, setSelectedType, toggleCentralsUpdate, centralsUpdate, watchList, setSelectedProductions, setEndDate, setStartDate, setWatchList, setSelectedCompanies } = useContext(MyContext);
     useEffect(() => {
         if (watchList) {
             callFetch("/api/getwatchlist");
         }
-    }, [watchList])
+        // eslint-disable-next-line
+    }, [watchList, update])
     function handleGet() {
         wcallFetch(`/api/getwatchlist?name=${selected}`)
     }
     if (watchList === true) {
-        if (wdata && wdata.status == 200) {
+        if (wdata && wdata.status === 200) {
             const js = JSON.parse(wdata.data.json)
             setSelectedCompanies(js.map(item => item.etso))
             setSelectedStations(js.map(item => ({
@@ -101,13 +115,23 @@ function WatchList() {
             setWatchList(false);
         }
     }
-    let q = 0;
-    if (data && data.status == 200) {
+    let q;
+    function handleRemove(name, index) {
+        fetch(`/api/removewatchlist?name=${name}`).then(r => r.json()).then(res => {
+            console.log(res);
+            if (res.message === "success") {
+                q = q.splice(index, 1);
+                toggleUpdate(!update);
+            }
+        });
+    }
+    if (data && data.status === 200) {
         if (data.data.length > 0) {
             q = data.data.map((item, index) => (
                 <WatchBox>
-                    <input type="radio" checked={selected == item} onChange={() => setSelected(item)} />
+                    <input type="radio" checked={selected === item} onChange={() => setSelected(item)} />
                     <span>{item}</span>
+                    <button onClick={() => handleRemove(item, index)} ><Bin /></button>
                 </WatchBox>
             ))
         }
